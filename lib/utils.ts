@@ -30,10 +30,11 @@ export function getReadTime(jsonString: string) {
   try {
     parsed = JSON.parse(jsonString);
   } catch (error) {
-    throw new Error("Invalid JSON format");
+    throw new Error(`Invalid JSON format ${error}`);
   }
 
   // Function to extract text recursively
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function extractText(content: any[]): string {
     return content
       .map((block) => {

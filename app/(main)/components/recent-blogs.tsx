@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -142,7 +142,7 @@ interface ItemProps {
   blog: Blog;
 }
 
-RecentBlogsList.Item = ({ blog }: ItemProps) => {
+const Item = ({ blog }: ItemProps) => {
   const router = useRouter();
 
   const onClick = () => {
@@ -158,9 +158,9 @@ RecentBlogsList.Item = ({ blog }: ItemProps) => {
             "opacity-60 group-hover:opacity-100 transition-opacity",
         )}
       >
-        {blog?.cover_image && (
+        {blog?.cover_image?.image_url && (
           <Image
-            src={blog?.cover_image}
+            src={blog?.cover_image.image_url}
             alt="Cover Image of the Blog"
             fill
             className="object-cover"
@@ -210,5 +210,7 @@ const ClockIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
   return <ClockComponent {...props} />;
 };
+
+RecentBlogsList.Item = Item;
 
 export default RecentBlogsList;

@@ -1,10 +1,4 @@
-import React, {
-  ComponentRef,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { ComponentRef, useRef, useState } from "react";
 
 import { useParams } from "next/navigation";
 
@@ -21,7 +15,7 @@ const TopbarTitle = () => {
   );
 
   const inputRef = useRef<ComponentRef<"textarea">>(null);
-  const [value, setValue] = useState<string>(blog?.title!);
+  const [value, setValue] = useState<string | null>(blog?.title ?? null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = () => {
@@ -63,7 +57,7 @@ const TopbarTitle = () => {
           placeholder={blog?.parent_blog === "" ? "New Blog" : "New Page"}
           onKeyDown={onKeyDown}
           onBlur={disableInput}
-          value={value}
+          value={value!}
           maxRows={1}
           onChange={(e) => onInput(e.target.value)}
           className="bg-transparent outline-none resize-none p-1 px-2 w-80 truncate max-h-[48px] line-clamp-1"
@@ -73,7 +67,7 @@ const TopbarTitle = () => {
           className="select-none cursor-text p-1 px-2 rounded-md max-w-80 truncate"
           onClick={enableInput}
         >
-          {blog?.title!}
+          {blog?.title}
         </div>
       )}
     </>

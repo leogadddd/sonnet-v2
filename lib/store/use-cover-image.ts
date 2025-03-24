@@ -14,6 +14,6 @@ export const useCoverImage = create<CoverImageStore>((set) => ({
   onOpen: () => set({ modal_state: true }),
   onClose: () => set({ modal_state: false }),
 
-  url: undefined,
+  image: undefined,
   onReplace: (url: string) => set({ modal_state: true, url }),
 }));

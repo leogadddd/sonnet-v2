@@ -144,7 +144,7 @@ const Sidebar = () => {
         <Sidebar.Button label="Trash" icon={Trash} onClick={onOpenTrashBox} />
       </>
     ),
-    [router],
+    [router, onOpenSearchCommand, onOpenTrashBox],
   );
 
   const sidebarWorkspaces = useMemo(
@@ -236,13 +236,7 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-Sidebar.Button = ({
-  label,
-  subLabel,
-  icon: Icon,
-  isMobile,
-  onClick,
-}: ButtonProps) => {
+const Button = ({ label, subLabel, icon: Icon, onClick }: ButtonProps) => {
   return (
     <div
       role="button"
@@ -262,7 +256,7 @@ interface WorkspaceProps {
   pins?: boolean;
 }
 
-Sidebar.Workspace = ({ label, pins = false }: WorkspaceProps) => {
+const Workspace = ({ label, pins = false }: WorkspaceProps) => {
   const router = useRouter();
   const [isEmpty, setIsEmpty] = useState<boolean>(false);
   const createNewBlog = async () => {
@@ -310,72 +304,67 @@ interface WorkspaceListProps {
   setIsEmpty?: (value: boolean) => void;
 }
 
-Sidebar.WorkspaceList = React.memo(
-  ({
-    parent_blog,
-    level = 0,
-    pins = false,
-    setIsEmpty,
-  }: WorkspaceListProps) => {
-    const router = useRouter();
-    const blogs = SidebarBlogs(parent_blog, pins) || [];
-    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+const List = ({
+  parent_blog,
+  level = 0,
+  pins = false,
+  setIsEmpty,
+}: WorkspaceListProps) => {
+  const router = useRouter();
+  const blogs = SidebarBlogs(parent_blog, pins) || [];
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-    const onExpand = useCallback((blog_id: string) => {
-      setExpanded((prevExpanded) => ({
-        ...prevExpanded,
-        [blog_id]: !prevExpanded[blog_id],
-      }));
-    }, []);
+  const onExpand = useCallback((blog_id: string) => {
+    setExpanded((prevExpanded) => ({
+      ...prevExpanded,
+      [blog_id]: !prevExpanded[blog_id],
+    }));
+  }, []);
 
-    const onRedirect = useCallback(
-      (blog_id: string) => {
-        router.push(`/app/${blog_id}`);
-      },
-      [router],
-    );
+  const onRedirect = useCallback((blog_id: string) => {
+    router.push(`/app/${blog_id}`);
+  }, []);
 
-    useEffect(() => {
-      setIsEmpty?.(blogs.length === 0);
-    }, [blogs, setIsEmpty]);
+  useEffect(() => {
+    setIsEmpty?.(blogs.length === 0);
+  }, [blogs, setIsEmpty]);
 
-    if (!blogs) return null;
+  if (!blogs) return null;
 
-    return (
-      <>
-        <p
-          style={{
-            paddingLeft: level ? `${level * 6 + 6}px` : "12px",
-          }}
-          className={cn(
-            "hidden text-xs dark:text-muted-foreground/50 text-muted-foreground ml-4 py-1 truncate w-full",
-            expanded && "last:block",
-            level === 0 && "hidden",
-          )}
-        >
-          No Pages inside
-        </p>
-        {blogs.map((blog) => (
-          <div key={blog.blog_id}>
-            <Sidebar.BlogItem
-              id={blog.blog_id}
-              level={level}
-              onClick={() => onRedirect(blog.blog_id)}
-              onExpand={() => onExpand(blog.blog_id)}
-              expanded={expanded[blog.blog_id]}
+  return (
+    <>
+      <p
+        style={{
+          paddingLeft: level ? `${level * 6 + 6}px` : "12px",
+        }}
+        className={cn(
+          "hidden text-xs dark:text-muted-foreground/50 text-muted-foreground ml-4 py-1 truncate w-full",
+          expanded && "last:block",
+          level === 0 && "hidden",
+        )}
+      >
+        No Pages inside
+      </p>
+      {blogs.map((blog) => (
+        <div key={blog.blog_id}>
+          <Sidebar.BlogItem
+            id={blog.blog_id}
+            level={level}
+            onClick={() => onRedirect(blog.blog_id)}
+            onExpand={() => onExpand(blog.blog_id)}
+            expanded={expanded[blog.blog_id]}
+          />
+          {expanded[blog.blog_id] && (
+            <Sidebar.WorkspaceList
+              parent_blog={blog.blog_id}
+              level={level + 1}
             />
-            {expanded[blog.blog_id] && (
-              <Sidebar.WorkspaceList
-                parent_blog={blog.blog_id}
-                level={level + 1}
-              />
-            )}
-          </div>
-        ))}
-      </>
-    );
-  },
-);
+          )}
+        </div>
+      ))}
+    </>
+  );
+};
 
 interface WorkspaceItemProps {
   id: string;
@@ -385,7 +374,7 @@ interface WorkspaceItemProps {
   expanded: boolean;
 }
 
-Sidebar.BlogItem = ({
+const Item = ({
   id,
   level,
   expanded,
@@ -397,7 +386,7 @@ Sidebar.BlogItem = ({
   const blog = useLiveQuery(async () => await dbClient.getBlogById(id), [id]);
 
   const inputRef = useRef<ComponentRef<"textarea">>(null);
-  const [value, setValue] = useState<string>(blog?.title!);
+  const [value, setValue] = useState<string | null>(blog?.title ?? null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -494,7 +483,7 @@ Sidebar.BlogItem = ({
             placeholder={blog?.parent_blog === "" ? "New Blog" : "New Page"}
             onKeyDown={onKeyDown}
             onBlur={disableInput}
-            value={value}
+            value={value!}
             maxRows={1}
             onChange={(e) => onInput(e.target.value)}
             className="bg-transparent break-words outline-none resize-none"
@@ -507,7 +496,7 @@ Sidebar.BlogItem = ({
       </div>
       <div className="flex items-center mr-2 gap-x-1 opacity-0 group-hover/blogItem:opacity-100 transition-opacity">
         <ContextMenu
-          opt={[{ title: "Blog Actions", opt: [...blog?.actions!] }]}
+          opt={[{ title: "Blog Actions", opt: [...blog?.actions] }]}
           side="right"
           sideOffset={35}
         >
@@ -530,5 +519,10 @@ Sidebar.BlogItem = ({
     </div>
   );
 };
+
+Sidebar.Button = Button;
+Sidebar.Workspace = Workspace;
+Sidebar.WorkspaceList = List;
+Sidebar.BlogItem = Item;
 
 export default Sidebar;

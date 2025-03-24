@@ -1,3 +1,4 @@
+import { uploadFn } from "./image-upload";
 import {
   CheckSquare,
   Code,
@@ -7,14 +8,12 @@ import {
   ImageIcon,
   List,
   ListOrdered,
-  MessageSquarePlus,
   Text,
   TextQuote,
   Twitter,
   Youtube,
 } from "lucide-react";
 import { Command, createSuggestionItems, renderItems } from "novel";
-import { uploadFn } from "./image-upload";
 
 export const suggestionItems = createSuggestionItems([
   {
@@ -152,7 +151,7 @@ export const suggestionItems = createSuggestionItems([
       const videoLink = prompt("Please enter Youtube Video Link");
       //From https://regexr.com/3dj5t
       const ytregex = new RegExp(
-        /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+        /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/,
       );
 
       if (!videoLink) return;
@@ -181,7 +180,7 @@ export const suggestionItems = createSuggestionItems([
     command: ({ editor, range }) => {
       const tweetLink = prompt("Please enter Twitter Link");
       const tweetRegex = new RegExp(
-        /^https?:\/\/(www\.)?x\.com\/([a-zA-Z0-9_]{1,15})(\/status\/(\d+))?(\/\S*)?$/
+        /^https?:\/\/(www\.)?x\.com\/([a-zA-Z0-9_]{1,15})(\/status\/(\d+))?(\/\S*)?$/,
       );
 
       if (!tweetLink) return;

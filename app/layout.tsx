@@ -4,7 +4,6 @@ import { EdgeStoreProvider } from "../lib/edgestore/edgestore";
 import { poppins } from "./fonts";
 import "./styles/globals.css";
 import ModalsProvider from "@/components/modals";
-import SettingsInitializer from "@/components/settings-initializer";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -35,25 +34,12 @@ export default function RootLayout({
       </head> */}
       <body className={cn("antialiased", poppins.className)}>
         <ClerkProvider
-          appearance={{
-            // Optional: customize the appearance
-            elements: {
-              rootBox: {
-                boxShadow: "none",
-              },
-              card: {
-                border: "1px solid #e5e5e5",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              },
-            },
-          }}
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         >
           <EdgeStoreProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Toaster position="bottom-right" />
               <ModalsProvider />
-              <SettingsInitializer />
               {children}
             </ThemeProvider>
           </EdgeStoreProvider>

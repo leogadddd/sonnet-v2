@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         hostname: "files.edgestore.dev",
         protocol: "https",
       },
+      {
+        hostname: "bcepdlwsaoultocbdoox.supabase.co",
+        protocol: "https",
+      },
     ],
   },
   crossOrigin: "anonymous",

@@ -9,14 +9,10 @@ import ConfirmModal from "./confirm-modal";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useTrashbox } from "@/lib/store/use-trash-box";
-import Blog from "@/lib/system/localdb/blog";
 import dbClient, { TrashBoxBlogs } from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -44,7 +40,7 @@ interface BlogsListProps {
   level?: number;
 }
 
-TrashBoxModal.BlogsList = ({ parent_blog = "", level = 0 }: BlogsListProps) => {
+const List = ({ parent_blog = "", level = 0 }: BlogsListProps) => {
   const blogs = TrashBoxBlogs(parent_blog) || [];
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -104,7 +100,7 @@ interface BlogItemProps {
   onExpand: () => void;
 }
 
-TrashBoxModal.BlogItem = ({ id, level, expanded, onExpand }: BlogItemProps) => {
+const Item = ({ id, level, expanded, onExpand }: BlogItemProps) => {
   const router = useRouter();
   const params = useParams();
 
@@ -191,5 +187,8 @@ TrashBoxModal.BlogItem = ({ id, level, expanded, onExpand }: BlogItemProps) => {
     </div>
   );
 };
+
+TrashBoxModal.BlogsList = List;
+TrashBoxModal.BlogItem = Item;
 
 export default TrashBoxModal;

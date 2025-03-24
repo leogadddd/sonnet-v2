@@ -1,5 +1,5 @@
 import { SettingsManager } from "../system/settings-manager";
-import { Settings } from "../system/settings/settings-schema";
+import { Settings } from "../system/settings/settings";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -10,13 +10,14 @@ type SettingsStore = {
   onOpen: () => void;
   onClose: () => void;
   toggle: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateSetting: (key: keyof SettingsManager["settings"], value: any) => void;
 };
 
 // Create Zustand store with persistence
 export const useSettings = create<SettingsStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       modal_state: false,
       settings: new Settings(),
 

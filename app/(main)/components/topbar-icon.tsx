@@ -1,21 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
-import { useTheme } from "next-themes";
 import { useParams } from "next/navigation";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useEmojiPicker } from "@/lib/store/use-emoji-picker";
 import dbClient from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
-import EmojiPicker, { Theme } from "emoji-picker-react";
 import { FileIcon } from "lucide-react";
 
 const TopbarIcon = () => {

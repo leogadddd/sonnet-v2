@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 
 import { useParams } from "next/navigation";
 
@@ -14,12 +14,12 @@ export type MenuActions = {
   icon: LucideIcon;
   name: string;
   description: string;
-  disable: boolean | ((ctx: any) => boolean);
+  disable: boolean | (() => boolean);
   shortcut?: {
     keys: string;
     register: (handler: (event: KeyboardEvent) => void) => void;
   };
-  action: (args?: any) => void;
+  action: () => void;
 };
 
 const TopbarMenuButton = () => {

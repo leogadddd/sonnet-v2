@@ -41,7 +41,7 @@ type Metadata = {
   value: string;
 };
 
-Toolbar.Meta = ({ blog }: MetaProps) => {
+const Meta = ({ blog }: MetaProps) => {
   const { user } = useUser();
 
   const metadataList: Metadata[] = [
@@ -84,7 +84,7 @@ interface IconProps {
   blog: Blog;
 }
 
-Toolbar.Icon = ({ blog }: IconProps) => {
+const Icon = ({ blog }: IconProps) => {
   const { onOpen } = useEmojiPicker();
 
   const removeIcon = async () => {
@@ -125,7 +125,7 @@ interface ButtonsProps {
   blog: Blog;
 }
 
-Toolbar.Buttons = ({ blog }: ButtonsProps) => {
+const Buttons = ({ blog }: ButtonsProps) => {
   const { onOpen: onOpenCoverImage } = useCoverImage();
   const { onOpen: onOpenEmojiPicker } = useEmojiPicker();
 
@@ -142,13 +142,14 @@ Toolbar.Buttons = ({ blog }: ButtonsProps) => {
           add icon
         </Button>
       )}
-      {!blog?.cover_image && (
+      {!blog?.cover_image?.image_url && (
         <Button
           variant="ghost"
           size="sm"
           onClick={onOpenCoverImage}
           className="text-muted-foreground/25 text-xs font-normal"
         >
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image className="mr-2" />
           add cover
         </Button>
@@ -161,9 +162,9 @@ interface TitleProps {
   blog: Blog;
 }
 
-Toolbar.Title = ({ blog }: TitleProps) => {
+const Title = ({ blog }: TitleProps) => {
   const inputRef = useRef<ComponentRef<"textarea">>(null);
-  const [value, setValue] = useState<string>(blog?.title!);
+  const [value, setValue] = useState<string>(blog?.title);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = () => {
@@ -222,9 +223,9 @@ interface DescriptionProps {
   blog: Blog;
 }
 
-Toolbar.Description = ({ blog }: DescriptionProps) => {
+const Description = ({ blog }: DescriptionProps) => {
   const inputRef = useRef<ComponentRef<"textarea">>(null);
-  const [value, setValue] = useState<string>(blog?.description!);
+  const [value, setValue] = useState<string>(blog?.description);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = () => {
@@ -279,5 +280,11 @@ Toolbar.Description = ({ blog }: DescriptionProps) => {
     </div>
   );
 };
+
+Toolbar.Meta = Meta;
+Toolbar.Icon = Icon;
+Toolbar.Buttons = Buttons;
+Toolbar.Title = Title;
+Toolbar.Description = Description;
 
 export default Toolbar;

@@ -1,24 +1,16 @@
+import { defaultSettingsValue } from "./settings";
+import AccountCenter from "@/components/user/account-settings";
 import {
   BookOpen,
-  HandHelping,
+  Cloud,
   LucideIcon,
   MessageCircleQuestion,
   PaintbrushVertical,
   SettingsIcon,
+  User,
 } from "lucide-react";
 
-export type SettingCategoryType = "General" | "Appearance" | "Help" | "About";
 export type SettingType = "switch" | "dropdown" | "text" | "number";
-
-export class Settings {
-  darkmode: boolean = true;
-
-  constructor(initial?: Settings) {
-    Object.assign(this, initial);
-  }
-}
-
-export const defaultSettingsValue = new Settings();
 
 export type SettingItemType = {
   key: string;
@@ -33,23 +25,31 @@ export type SettingsType = {
   key: string;
   label: string;
   icon: LucideIcon;
-  category: SettingCategoryType;
-  settings_list?: SettingItemType[];
+  content?: (SettingItemType | React.FC | undefined)[];
 };
 
 export const settings_list: SettingsType[] = [
   {
+    key: "account",
+    label: "Account",
+    icon: User,
+    content: [AccountCenter],
+  },
+  {
+    key: "sonnet-sync",
+    label: "Sonnet Sync",
+    icon: Cloud,
+  },
+  {
     key: "general",
     label: "General",
-    category: "General",
     icon: SettingsIcon,
   },
   {
     key: "appearance",
     label: "Appearance",
-    category: "Appearance",
     icon: PaintbrushVertical,
-    settings_list: [
+    content: [
       {
         key: "darkmode",
         type: "switch",
@@ -63,13 +63,11 @@ export const settings_list: SettingsType[] = [
   {
     key: "help",
     label: "Help",
-    category: "Help",
     icon: MessageCircleQuestion,
   },
   {
     key: "about",
     label: "About",
-    category: "About",
     icon: BookOpen,
   },
 ];

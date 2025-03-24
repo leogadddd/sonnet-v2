@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import SearchCommand from "@/components/search-command";
+import SettingsInitializer from "@/components/settings-initializer";
 import SideBar from "@/components/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useUser } from "@/lib/store/use-user";
@@ -20,7 +21,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
     setUserByClerkId(userId);
     if (!isSignedIn && isLoaded) return router.push("/");
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, router, setUserByClerkId, userId]);
 
   if (!isLoaded || !isSignedIn || !userId) {
     return (
@@ -32,6 +33,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-full overflow-hidden">
+      <SettingsInitializer />
       <SearchCommand />
       <SideBar />
       <main className="h-full flex-1 overflow-y-auto dark:bg-[#141414]">

@@ -7,12 +7,15 @@ import ConfirmModal from "./modals/confirm-modal";
 import { Button } from "./ui/button";
 import { useEdgeStore } from "@/lib/edgestore/edgestore";
 import { useCoverImage } from "@/lib/store/use-cover-image";
+import { useSupabase } from "@/lib/supabase/supabase-client";
+import { cover_image } from "@/lib/system/localdb/blog";
 import dbClient from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ImageIcon, Trash } from "lucide-react";
 
 const Cover = () => {
+  const supabase = useSupabase();
   const params = useParams();
   const { onReplace } = useCoverImage();
   const { edgestore } = useEdgeStore();
@@ -23,8 +26,17 @@ const Cover = () => {
   );
 
   const onRemove = async () => {
-    await edgestore.publicFiles.delete({ url: blog?.cover_image as string });
+    if (!blog?.cover_image) return;
+
+    const cover_image: cover_image = blog?.cover_image;
+    await supabase
+      .from("uploaded_images")
+      .delete()
+      .eq("id", cover_image.uploaded_image_id);
     await blog?.updateCoverImage(null);
+    await edgestore.publicFiles.delete({
+      url: blog?.cover_image?.image_url as string,
+    });
   };
 
   return (
@@ -37,7 +49,7 @@ const Cover = () => {
       {!!blog?.cover_image && (
         <>
           <Image
-            src={blog?.cover_image as string}
+            src={blog?.cover_image.image_url as string}
             fill
             alt="Cover Image for the Blog"
             className="object-cover object-center"
@@ -50,7 +62,7 @@ const Cover = () => {
           <Button
             size="sm"
             className="text-muted-foreground text-xs border-none bg-transparent hover:bg-background/50"
-            onClick={() => onReplace(blog?.cover_image as string)}
+            onClick={() => onReplace(blog?.cover_image?.image_url as string)}
           >
             <ImageIcon className="mr-2" />
             Change Cover

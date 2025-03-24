@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { headers } from "next/headers";
 
-import { useSupabase } from "@/lib/supabase/supabase-server";
+import { useSupabase as Supabase } from "@/lib/supabase/supabase-server";
 import { User } from "@/lib/system/user/user";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { Webhook } from "svix";
 
 export async function POST(req: Request) {
-  const supabase = await useSupabase();
+  const supabase = await Supabase();
   const SIGNING_SECRET = process.env.CLERK_SIGNING_KEY;
 
   if (!SIGNING_SECRET) {

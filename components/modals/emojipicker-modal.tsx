@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
@@ -25,14 +25,10 @@ const EmojiPickerDialog: React.FC = () => {
   );
 
   const { theme } = useTheme();
-  const { modal_state, onOpen, onClose } = useEmojiPicker();
-  const [selectedEmoji, setSelectedEmoji] = useState<string>("");
-  const [inputValue, setInputValue] = useState<string>("");
+  const { modal_state, onClose } = useEmojiPicker();
 
   const handleEmojiClick = async (emojiData: { emoji: string }) => {
     await blog?.updateIcon(emojiData.emoji);
-    setSelectedEmoji(emojiData.emoji);
-    setInputValue((prev) => prev + emojiData.emoji);
     onClose();
   };
 

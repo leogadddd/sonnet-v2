@@ -1,16 +1,18 @@
+import { useEffect, useRef } from "react";
+
 import { Button } from "@/components/novel/ui/button";
 import { PopoverContent } from "@/components/novel/ui/popover";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { Check, Trash } from "lucide-react";
 import { useEditor } from "novel";
-import { useEffect, useRef } from "react";
 
 export function isValidUrl(url: string) {
   try {
     new URL(url);
     return true;
-  } catch (_e) {
+  } catch (error) {
+    console.log(error);
     return false;
   }
 }
@@ -20,7 +22,8 @@ export function getUrlFromString(str: string) {
     if (str.includes(".") && !str.includes(" ")) {
       return new URL(`https://${str}`).toString();
     }
-  } catch (_e) {
+  } catch (error) {
+    console.log(error);
     return null;
   }
 }

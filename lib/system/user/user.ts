@@ -19,6 +19,9 @@ export type UserObject = {
   is_banned: boolean;
   is_deleted: boolean;
 
+  synced_blog_count: number;
+  total_storage_used: number;
+
   preference: object; //for now
 
   deleted_at: number;
@@ -63,6 +66,9 @@ export class User {
   is_banned: boolean = false;
   is_deleted: boolean = false;
 
+  synced_blog_count: number = 0;
+  total_storage_used: number = 0;
+
   preference: Preference = { isDarkMode: true };
 
   deleted_at: number = 0;
@@ -88,6 +94,8 @@ export class User {
       is_verified: this.is_verified,
       is_banned: this.is_banned,
       is_deleted: this.is_deleted,
+      synced_blog_count: this.synced_blog_count,
+      total_storage_used: this.total_storage_used,
       preference: this.preference,
       deleted_at: this.deleted_at,
       created_at: this.created_at,

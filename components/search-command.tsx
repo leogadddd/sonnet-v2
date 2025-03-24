@@ -96,6 +96,7 @@ const SearchCommand = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modal_state, filteredItems, selectedIndex]);
 
   // Scroll selected item into view
@@ -167,7 +168,7 @@ const SearchCommand = () => {
                 </h2>
                 {filteredCommands.map((command, index) => {
                   const absoluteIndex = filteredBlogs.length + index;
-                  const Icon = command?.icon!;
+                  const Icon = command?.icon;
                   return (
                     <CommandItem
                       key={command.id}
@@ -180,7 +181,7 @@ const SearchCommand = () => {
                     >
                       <div className="flex items-center gap-x-2 text-sm">
                         <div>
-                          {command?.icon && (
+                          {Icon && (
                             <Icon className={cn("shrink-0 h-[18px] mr-1")} />
                           )}
                         </div>

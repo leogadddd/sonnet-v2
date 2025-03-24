@@ -1,10 +1,26 @@
-import { useSupabase } from "../supabase/supabase-client";
+import { useSupabase as UseSupabase } from "../supabase/supabase-client";
 import { User } from "../system/user/user";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type EmailAddress = {
+  created_at: number;
+  email_address: string;
+  id: string;
+  linked_to: { id: string; type: string }[];
+  matches_sso_connection: boolean;
+  object: string;
+  reserved: boolean;
+  updated_at: number;
+  verification: {
+    attempts: number | null;
+    expire_at: number | null;
+    status: string;
+    strategy: string;
+  };
+};
+
 const CRYPTO_KEY = process.env.NEXT_PUBLIC_CRYPTO_KEY;
-const subtle = typeof window !== "undefined" ? window.crypto.subtle : null;
 
 if (!CRYPTO_KEY) {
   throw new Error("CRYPTO_KEY is not defined");
@@ -77,11 +93,11 @@ export const useUser = create<UserStore>()(
       setUser: (user) => set({ user }),
 
       setUserByClerkId: async (clerkId) => {
-        const supabase = await useSupabase();
+        const supabase = await UseSupabase();
 
         const { data, error } = await supabase
           .from("users")
-          .select("*")
+          .select("*, email_addresses")
           .eq("clerk_id", clerkId)
           .single();
 
@@ -90,7 +106,18 @@ export const useUser = create<UserStore>()(
           return;
         }
 
-        set({ user: data });
+        // Parse email_addresses from text[] to JSON
+        const emailAddresses =
+          data?.email_addresses?.map(
+            (email: string) => JSON.parse(email) as EmailAddress,
+          ) || [];
+
+        set({
+          user: {
+            ...data,
+            email_addresses: emailAddresses,
+          },
+        });
       },
     }),
     {

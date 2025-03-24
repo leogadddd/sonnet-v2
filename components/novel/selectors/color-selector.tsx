@@ -1,12 +1,12 @@
-import { Check, ChevronDown } from "lucide-react";
-import { EditorBubbleItem, useEditor } from "novel";
-
 import { Button } from "@/components/novel/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/novel/ui/popover";
+import { Check, ChevronDown } from "lucide-react";
+import { EditorBubbleItem, useEditor } from "novel";
+
 export interface BubbleColorMenuItem {
   name: string;
   color: string;
@@ -98,13 +98,30 @@ interface ColorSelectorProps {
 export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
   const { editor } = useEditor();
 
+  const onSelectColor = (name: string, color: string) => {
+    editor?.commands.unsetColor();
+    if (name !== "Default")
+      editor
+        ?.chain()
+        .focus()
+        .setColor(color || "")
+        .run();
+    onOpenChange(false);
+  };
+
+  const onSelectHighlight = (name: string, color: { color: string }) => {
+    editor?.commands.unsetHighlight();
+    if (name !== "Default") editor?.chain().focus().setHighlight(color).run();
+    onOpenChange(false);
+  };
+
   if (!editor) return null;
   const activeColorItem = TEXT_COLORS.find(({ color }) =>
-    editor.isActive("textStyle", { color })
+    editor.isActive("textStyle", { color }),
   );
 
   const activeHighlightItem = HIGHLIGHT_COLORS.find(({ color }) =>
-    editor.isActive("highlight", { color })
+    editor.isActive("highlight", { color }),
   );
 
   return (
@@ -136,16 +153,7 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
           {TEXT_COLORS.map(({ name, color }) => (
             <EditorBubbleItem
               key={name}
-              onSelect={() => {
-                editor.commands.unsetColor();
-                name !== "Default" &&
-                  editor
-                    .chain()
-                    .focus()
-                    .setColor(color || "")
-                    .run();
-                onOpenChange(false);
-              }}
+              onSelect={() => onSelectColor(name, color)}
               className="flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent"
             >
               <div className="flex items-center gap-2">
@@ -167,12 +175,7 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
           {HIGHLIGHT_COLORS.map(({ name, color }) => (
             <EditorBubbleItem
               key={name}
-              onSelect={() => {
-                editor.commands.unsetHighlight();
-                name !== "Default" &&
-                  editor.chain().focus().setHighlight({ color }).run();
-                onOpenChange(false);
-              }}
+              onSelect={() => onSelectHighlight(name, { color })}
               className="flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent"
             >
               <div className="flex items-center gap-2">

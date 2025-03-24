@@ -10,7 +10,6 @@ import GenerativeMenuSwitch from "./novel/generative/generative-menu-switch";
 import { uploadFn } from "./novel/image-upload";
 import { ColorSelector } from "./novel/selectors/color-selector";
 import { LinkSelector } from "./novel/selectors/link-selector";
-import { MathSelector } from "./novel/selectors/math-selector";
 import { NodeSelector } from "./novel/selectors/node-selector";
 import { TextButtons } from "./novel/selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./novel/slash-command";
@@ -43,8 +42,8 @@ const poppins = Poppins({
 const extensions = [...defaultExtensions, slashCommand];
 
 const Editor = () => {
-  const [editable, setEditable] = useState<boolean>(true);
-  const [isViewer, setIsViewer] = useState<boolean>(false);
+  const [editable] = useState<boolean>(true);
+  const [isViewer] = useState<boolean>(false);
   const params = useParams();
 
   const blog = useLiveQuery(
@@ -52,7 +51,7 @@ const Editor = () => {
     [params?.blog_id],
   );
 
-  const [content, setContent] = useState<JSONContent | null>(null);
+  const [content] = useState<JSONContent | null>(null);
   const [editor, setEditor] = useState<EditorInstance | undefined>(undefined);
 
   const [openNode, setOpenNode] = useState(false);
@@ -73,7 +72,7 @@ const Editor = () => {
     if (editor) {
       editor.setEditable(editable);
     }
-  }, [editable]);
+  }, [editable, editor]);
 
   useEffect(() => {
     if (!editor || !blog?.content) return;

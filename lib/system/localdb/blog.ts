@@ -1,17 +1,18 @@
+import { UploadedImage } from "../storage/image/image";
 import { blogActions } from "./actions";
 import dbClient from "./client";
 import type SonnetDB from "./db";
 import { getReadTime } from "@/lib/utils";
 import { Entity } from "dexie";
 import { LucideIcon } from "lucide-react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 
 export type BlogActionInternal = {
   icon: LucideIcon;
   name: string;
   description: string;
   disable: boolean | ((ctx: Blog) => boolean);
-  action: (ctx: Blog, args: any) => {};
+  action: (ctx: Blog, args: object) => BlogAction[];
   shortcut?: {
     keys: string;
     register: (handler: (event: KeyboardEvent) => void) => void;
@@ -23,7 +24,7 @@ export type BlogAction = {
   name: string;
   description: string;
   disable: boolean | ((ctx: Blog) => boolean);
-  action: (args?: any) => {};
+  action: (args?: object) => BlogAction[];
   shortcut?: {
     keys: string;
     register: (handler: (event: KeyboardEvent) => void) => void;
@@ -39,6 +40,11 @@ export type EdgestoreResponse = {
   pathOrder: string[];
 };
 
+export type cover_image = {
+  uploaded_image_id: string;
+  image_url: string;
+};
+
 export default class Blog extends Entity<SonnetDB> {
   blog_id!: string;
   title!: string;
@@ -48,7 +54,7 @@ export default class Blog extends Entity<SonnetDB> {
 
   description!: string;
   content!: string;
-  cover_image!: string | null;
+  cover_image!: cover_image | null;
   icon!: string | null;
 
   tags!: string[];
@@ -170,9 +176,14 @@ export default class Blog extends Entity<SonnetDB> {
     });
   }
 
-  async updateCoverImage(response: EdgestoreResponse | null) {
+  async updateCoverImage(image: UploadedImage | null) {
     await dbClient.updateBlog(this.blog_id, {
-      cover_image: response?.url ?? null,
+      cover_image: image
+        ? {
+            uploaded_image_id: image?.id,
+            image_url: image?.image_url,
+          }
+        : null,
     });
   }
 
@@ -206,7 +217,7 @@ export default class Blog extends Entity<SonnetDB> {
           typeof action.disable === "function"
             ? !action.disable(this)
             : !action.disable,
-        action: (args?: any) => action.action(this, args),
+        action: (args?: object) => action.action(this, args!),
       }));
     return actions;
   }
