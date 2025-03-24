@@ -81,7 +81,7 @@ async function decryptData(encryptedData: string) {
 
 interface UserStore {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
   setUserByClerkId: (clerkId: string) => Promise<void>;
 }
 

@@ -15,7 +15,7 @@ import { CheckCircle } from "lucide-react";
 const AccountCenter = () => {
   const { theme } = useTheme();
   const clerk = useClerk();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const { onClose } = useSettings();
 
   if (!user) return <></>;
@@ -31,6 +31,7 @@ const AccountCenter = () => {
 
   const signOut = () => {
     clerk.signOut();
+    setUser(null);
     onClose();
   };
 
