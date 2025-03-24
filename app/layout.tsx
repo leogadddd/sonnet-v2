@@ -33,9 +33,7 @@ export default function RootLayout({
         />
       </head> */}
       <body className={cn("antialiased", poppins.className)}>
-        <ClerkProvider
-          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        >
+        <ClerkProvider>
           <EdgeStoreProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Toaster position="bottom-right" />

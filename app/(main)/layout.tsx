@@ -13,14 +13,14 @@ import { useAuth } from "@clerk/nextjs";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const { user, setUserByClerkId } = useUser();
+  const { setUserByClerkId } = useUser();
   const { isSignedIn, isLoaded, userId } = useAuth();
 
   useEffect(() => {
     if (!userId) return;
 
     setUserByClerkId(userId);
-    if (!isSignedIn && isLoaded && !user) return router.push("/");
+    if (!isSignedIn && isLoaded) return router.push("/");
   }, [isSignedIn, isLoaded, router, setUserByClerkId, userId]);
 
   if (!isLoaded || !isSignedIn || !userId) {
