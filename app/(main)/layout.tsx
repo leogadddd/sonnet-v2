@@ -17,7 +17,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, isLoaded, userId } = useAuth();
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) return router.push("/");
 
     setUserByClerkId(userId);
     if (!isSignedIn && isLoaded) return router.push("/");
