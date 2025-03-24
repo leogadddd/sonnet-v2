@@ -99,10 +99,17 @@ export const useUser = create<UserStore>()(
           .from("users")
           .select("*, email_addresses")
           .eq("clerk_id", clerkId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Error fetching user:", error);
+          return;
+        }
+
+        if (!data) {
+          set({
+            user: null,
+          });
           return;
         }
 
