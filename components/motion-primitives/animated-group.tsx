@@ -1,6 +1,6 @@
 "use client";
 
-import { JSX, ReactNode } from "react";
+import { ReactNode } from "react";
 import React from "react";
 
 import { Variants, motion } from "motion/react";
@@ -120,13 +120,15 @@ function AnimatedGroup({
   const MotionComponent = React.useMemo(() => {
     return typeof as === "string"
       ? motion(as)
-      : motion(as as React.ComponentType<any>);
+      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        motion(as as React.ComponentType<any>);
   }, [as]);
 
   const MotionChild = React.useMemo(() => {
     return typeof asChild === "string"
       ? motion(asChild)
-      : motion(asChild as React.ComponentType<any>);
+      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        motion(asChild as React.ComponentType<any>);
   }, [asChild]);
 
   return (

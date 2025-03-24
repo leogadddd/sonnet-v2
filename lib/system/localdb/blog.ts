@@ -12,7 +12,7 @@ export type BlogActionInternal = {
   name: string;
   description: string;
   disable: boolean | ((ctx: Blog) => boolean);
-  action: (ctx: Blog, args: object) => BlogAction[];
+  action: (ctx: Blog, args: object) => Promise<void>;
   shortcut?: {
     keys: string;
     register: (handler: (event: KeyboardEvent) => void) => void;
@@ -24,7 +24,7 @@ export type BlogAction = {
   name: string;
   description: string;
   disable: boolean | ((ctx: Blog) => boolean);
-  action: (args?: object) => BlogAction[];
+  action: (args?: object) => Promise<void>;
   shortcut?: {
     keys: string;
     register: (handler: (event: KeyboardEvent) => void) => void;

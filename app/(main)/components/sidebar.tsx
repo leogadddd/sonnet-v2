@@ -311,6 +311,7 @@ const List = ({
   setIsEmpty,
 }: WorkspaceListProps) => {
   const router = useRouter();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const blogs = SidebarBlogs(parent_blog, pins) || [];
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -321,9 +322,12 @@ const List = ({
     }));
   }, []);
 
-  const onRedirect = useCallback((blog_id: string) => {
-    router.push(`/app/${blog_id}`);
-  }, []);
+  const onRedirect = useCallback(
+    (blog_id: string) => {
+      router.push(`/app/${blog_id}`);
+    },
+    [router],
+  );
 
   useEffect(() => {
     setIsEmpty?.(blogs.length === 0);

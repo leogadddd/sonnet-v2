@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 const RecentBlogsList = () => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const blogs = RecentBlogs() || [];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
