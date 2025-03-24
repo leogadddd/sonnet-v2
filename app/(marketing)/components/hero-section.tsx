@@ -9,7 +9,7 @@ import { AnimatedGroup } from "@/components/motion-primitives/animated-group";
 import { TextEffect } from "@/components/motion-primitives/text-effect";
 import { Button } from "@/components/ui/button";
 import { useOrigin } from "@/lib/hooks/useOrigin";
-import { useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Telescope } from "lucide-react";
 
@@ -37,6 +37,7 @@ export default function HeroSection() {
   const { theme } = useTheme();
   const origin = useOrigin();
   const clerk = useClerk();
+  const { isSignedIn } = useAuth();
   return (
     <>
       <HeroHeader />
@@ -150,7 +151,7 @@ export default function HeroSection() {
                     key={1}
                     className="rounded-[calc(var(--radius-lg)+0.125rem)] border p-0.5 bg-gradient-to-r from-[#ff3131] to-[#ff914d]"
                   >
-                    {clerk?.isSignedIn ? (
+                    {isSignedIn ? (
                       <Button
                         asChild
                         size="lg"

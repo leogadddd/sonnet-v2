@@ -9,7 +9,7 @@ import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
 import { useOrigin } from "@/lib/hooks/useOrigin";
 import { cn } from "@/lib/utils";
-import { useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Menu, X } from "lucide-react";
 
@@ -24,6 +24,7 @@ export const HeroHeader = () => {
   const { theme } = useTheme();
   const origin = useOrigin();
   const clerk = useClerk();
+  const { isSignedIn } = useAuth();
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
 
@@ -98,7 +99,7 @@ export const HeroHeader = () => {
                 </ul>
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                {!clerk?.isSignedIn && (
+                {!isSignedIn && (
                   <>
                     <Button
                       asChild
@@ -137,7 +138,7 @@ export const HeroHeader = () => {
                     </Button>
                   </>
                 )}
-                {clerk?.isSignedIn && (
+                {isSignedIn && (
                   <Button asChild size="sm">
                     <Link href="/app">
                       <span>Dashboard</span>
