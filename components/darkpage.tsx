@@ -9,7 +9,7 @@ const DarkPage = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     setTheme("dark");
-  });
+  }, []);
   return <>{children}</>;
 };
 

@@ -2,6 +2,7 @@ import React from "react";
 
 import { useTheme } from "next-themes";
 
+import ConfirmModal from "../modals/confirm-modal";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -25,6 +26,11 @@ const AccountCenter = () => {
         baseTheme: theme === "dark" ? dark : undefined,
       },
     });
+    onClose();
+  };
+
+  const signOut = () => {
+    clerk.signOut();
     onClose();
   };
 
@@ -116,8 +122,16 @@ const AccountCenter = () => {
             ))}
           </div>
         </div>
-        <div className="my-12 flex items-center justify-center">
+        <div className="my-12 flex items-center justify-center gap-x-4">
           <Button onClick={openAccountCenter}>Open Account Center</Button>
+          <ConfirmModal
+            onConfirm={signOut}
+            title="Logout?"
+            subText="You need to Log back in again."
+            confirmText="Logout"
+          >
+            <Button variant="destructive">Logout</Button>
+          </ConfirmModal>
         </div>
       </div>
     </div>
