@@ -1,6 +1,5 @@
 import SonnetDB from "./db";
 import { Entity } from "dexie";
-import { StringValidation } from "zod";
 
 type LogType = "Sync" | "General";
 

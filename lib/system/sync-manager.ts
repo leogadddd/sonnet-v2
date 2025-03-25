@@ -1,5 +1,5 @@
 import { useSupabase as UseSupabase } from "../supabase/supabase-client";
-import { BlogDifferences, TimeFormatter, getBlogDifferences } from "../utils";
+import { TimeFormatter } from "../utils";
 import Blog from "./localdb/blog";
 import dbClient from "./localdb/client";
 import SonnetDB from "./localdb/db";
@@ -15,7 +15,6 @@ export type Updates = {
   update_source: "local" | "cloud";
   status: "missing" | "outdated" | "conflict";
   updated_at: number;
-  difference?: BlogDifferences;
 };
 
 export class SyncManager {
@@ -79,7 +78,6 @@ export class SyncManager {
           update_source: "local",
           status: "outdated", // Should be updated locally
           updated_at: cloud_blog.updated_at,
-          difference: getBlogDifferences(local_blog, cloud_blog),
         });
       } else if (cloud_blog.updated_at < local_blog.updated_at) {
         // Local version is newer
@@ -88,7 +86,6 @@ export class SyncManager {
           update_source: "cloud",
           status: "outdated", // Should be updated on the cloud
           updated_at: local_blog.updated_at,
-          difference: getBlogDifferences(local_blog, cloud_blog),
         });
       }
 
@@ -246,8 +243,8 @@ export class SyncManager {
     return mergedDoc;
   }
 
-  private merge_tiptap_json(localDoc: any, cloudDoc: any): any {
-    const merged = { ...localDoc };
+  private merge_tiptap_json(localDoc: Blog, cloudDoc: Blog): Blog {
+    const merged = { ...localDoc } as Blog;
 
     // Merge content arrays (paragraphs)
     const localContent = localDoc.content || [];
@@ -273,7 +270,7 @@ export class SyncManager {
       }
     }
 
-    merged.content = mergedContent;
+    merged.content = JSON.stringify(mergedContent);
     return merged;
   }
 

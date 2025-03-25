@@ -65,27 +65,5 @@ export function getReadTime(jsonString: string) {
 
 export type BlogDifferences = {
   hasDifferences: boolean;
-  fields: Partial<Record<keyof Blog, { local: any; cloud: any }>>;
+  fields: Partial<Record<keyof Blog, { local: Blog; cloud: Blog }>>;
 };
-
-export function getBlogDifferences(local: Blog, cloud: Blog): BlogDifferences {
-  const differences: BlogDifferences = { hasDifferences: false, fields: {} };
-
-  if (cloud.parent_blog === null) cloud.parent_blog = "";
-
-  cloud.is_pinned = cloud.is_pinned ? 1 : 0;
-  cloud.is_featured = cloud.is_featured ? 1 : 0;
-  cloud.is_archived = cloud.is_archived ? 1 : 0;
-  cloud.is_preview = cloud.is_preview ? 1 : 0;
-  cloud.is_on_explore = cloud.is_on_explore ? 1 : 0;
-  cloud.is_published = cloud.is_published ? 1 : 0;
-
-  for (const key of Object.keys(local) as (keyof Blog)[]) {
-    if (local[key] !== cloud[key]) {
-      differences.hasDifferences = true;
-      differences.fields[key] = { local: local[key], cloud: cloud[key] };
-    }
-  }
-
-  return differences;
-}

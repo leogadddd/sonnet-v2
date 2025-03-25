@@ -1,6 +1,5 @@
 import React, { ComponentRef, useRef, useState } from "react";
 
-import { Truculenta } from "next/font/google";
 import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";

@@ -124,24 +124,6 @@ const Sidebar = () => {
     if (isMobile) collapse();
   }, [pathname, isMobile, collapse]);
 
-  useEffect(() => {
-    const handleToggleSidebar = (e: KeyboardEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (isCollapsed) resetWidth();
-      else collapse();
-    };
-
-    const shortcut = shortcutManager
-      .registerShortcut(handleToggleSidebar)
-      .ctrl()
-      .key("b");
-
-    return () =>
-      shortcutManager.unregisterShortcut(shortcut, handleToggleSidebar);
-  }, []);
-
   const sidebarButtons = useMemo(
     () => (
       <>

@@ -6,7 +6,6 @@ import SonnetDB from "./db";
 import Log from "./log";
 import { useUser } from "@/lib/store/use-user";
 import { useLiveQuery } from "dexie-react-hooks";
-import { title } from "process";
 import { toast } from "sonner";
 
 export class SonnetDBClient {

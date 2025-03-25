@@ -16,7 +16,7 @@ const SettingsInitializer = () => {
     if (!pathname.includes("/app")) return;
     if (theme !== (settings.darkmode ? "dark" : "light"))
       setTheme(settings.darkmode ? "dark" : "light");
-  }, [settings.darkmode, theme, setTheme]);
+  }, [settings.darkmode, theme, setTheme, pathname]);
   return <></>;
 };
 
