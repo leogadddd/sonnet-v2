@@ -18,6 +18,7 @@ import AppUser from "@/components/user/app-user";
 import { useSearchCommand } from "@/lib/store/use-search-command";
 import { useTrashbox } from "@/lib/store/use-trash-box";
 import dbClient, { SidebarBlogs } from "@/lib/system/localdb/client";
+import { shortcutManager } from "@/lib/system/shortcut-manager";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -122,6 +123,24 @@ const Sidebar = () => {
   useEffect(() => {
     if (isMobile) collapse();
   }, [pathname, isMobile, collapse]);
+
+  useEffect(() => {
+    const handleToggleSidebar = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isCollapsed) resetWidth();
+      else collapse();
+    };
+
+    const shortcut = shortcutManager
+      .registerShortcut(handleToggleSidebar)
+      .ctrl()
+      .key("b");
+
+    return () =>
+      shortcutManager.unregisterShortcut(shortcut, handleToggleSidebar);
+  }, []);
 
   const sidebarButtons = useMemo(
     () => (

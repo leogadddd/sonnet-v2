@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
 import { EdgeStoreProvider } from "../lib/edgestore/edgestore";
-import { poppins } from "./fonts";
+import { font } from "./fonts";
 import "./styles/globals.css";
-import ModalsProvider from "@/components/modals";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -32,12 +31,11 @@ export default function RootLayout({
           src="//unpkg.com/react-scan/dist/auto.global.js"
         />
       </head> */}
-      <body className={cn("antialiased", poppins.className)}>
+      <body className={cn("antialiased", font.className)}>
         <ClerkProvider>
           <EdgeStoreProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <Toaster position="bottom-right" />
-              <ModalsProvider />
               {children}
             </ThemeProvider>
           </EdgeStoreProvider>

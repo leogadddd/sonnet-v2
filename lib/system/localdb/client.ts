@@ -3,8 +3,10 @@
 import { handleDatabaseOperation } from "../errors/errorhandlers";
 import Blog from "./blog";
 import SonnetDB from "./db";
+import Log from "./log";
 import { useUser } from "@/lib/store/use-user";
 import { useLiveQuery } from "dexie-react-hooks";
+import { title } from "process";
 import { toast } from "sonner";
 
 export class SonnetDBClient {
@@ -20,6 +22,21 @@ export class SonnetDBClient {
       SonnetDBClient.instance = new SonnetDBClient();
     }
     return SonnetDBClient.instance;
+  }
+
+  private createLogInstance(data: Partial<Log>): Log {
+    const uuid = crypto.randomUUID();
+
+    return {
+      id: uuid,
+      user_id: data.user_id,
+      title: data.title ?? "General Log",
+      type: data.type ?? "General",
+      call_from: data.call_from ?? "Sonnet",
+      content: data.content ?? null,
+
+      created_at: data.created_at ?? Date.now(),
+    } as Log;
   }
 
   // ✅ Factory function to create Blog objects
@@ -93,6 +110,23 @@ export class SonnetDBClient {
     }, "Failed to create blog.");
   }
 
+  async generateLog(data: Partial<Log>): Promise<{ id: string | null }> {
+    return handleDatabaseOperation(async () => {
+      const { user } = useUser.getState();
+
+      if (!user) return { id: null };
+
+      const log = this.createLogInstance({
+        ...data,
+        user_id: user.id,
+      });
+
+      await this.db.logs.add(log);
+
+      return { id: log.id };
+    }, `Failed to Log this ${data.table?.toString()}`);
+  }
+
   // ✅ Add a page
   async createPage(data: Partial<Blog>): Promise<{ id: string | null }> {
     return handleDatabaseOperation(async () => {
@@ -162,6 +196,7 @@ export class SonnetDBClient {
 
   // ✅ Update a blog
   async updateBlog(blog_id: string, updates: Partial<Blog>): Promise<number> {
+    console.log(updates);
     return handleDatabaseOperation(
       () =>
         this.db.blogs.update(blog_id, {

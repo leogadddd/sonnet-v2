@@ -1,5 +1,6 @@
 import React, { ComponentRef, useRef, useState } from "react";
 
+import { Truculenta } from "next/font/google";
 import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ interface MetaProps {
 type Metadata = {
   label: string;
   value: string;
+  alwaysShow?: boolean;
 };
 
 const Meta = ({ blog }: MetaProps) => {
@@ -65,10 +67,18 @@ const Meta = ({ blog }: MetaProps) => {
   if (!user || !blog) return <></>;
 
   return (
-    <div className="py-4 opacity-30 group-hover/toolbar:opacity-75 transition-opacity">
+    <div className="py-4 opacity-30 group-hover/toolbar:opacity-50 transition-opacity">
       <div className="min-h-[52px] border-y border-muted-foreground/5 flex justify-between items-center">
         {metadataList.map((metadata) => (
-          <div key={metadata.label} className="flex flex-col ">
+          <div
+            key={metadata.label}
+            className={cn(
+              "flex flex-col",
+              !metadata.alwaysShow
+                ? "opacity-0 group-hover/toolbar:opacity-100"
+                : "",
+            )}
+          >
             <h1 className="text-sm text-muted-foreground/50">
               {metadata.label}
             </h1>

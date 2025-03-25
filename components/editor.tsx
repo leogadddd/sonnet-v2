@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Poppins } from "next/font/google";
 import { useParams } from "next/navigation";
 
 import { defaultExtensions } from "./novel/extensions";
@@ -14,6 +13,7 @@ import { NodeSelector } from "./novel/selectors/node-selector";
 import { TextButtons } from "./novel/selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./novel/slash-command";
 import { Separator } from "./novel/ui/separator";
+import { font } from "@/app/fonts";
 import dbClient from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -33,12 +33,6 @@ import {
 } from "novel";
 import { useDebouncedCallback } from "use-debounce";
 
-const poppins = Poppins({
-  subsets: ["latin"], // Ensures support for Latin characters
-  weight: ["400", "700"], // Specifies the font weights you need
-  variable: "--font-poppins", // Defines a CSS variable for global usage
-});
-
 const extensions = [...defaultExtensions, slashCommand];
 
 const Editor = () => {
@@ -52,6 +46,7 @@ const Editor = () => {
   );
 
   const [content] = useState<JSONContent | null>(null);
+  const lastSavedContent = useRef<string | null>(null);
   const [editor, setEditor] = useState<EditorInstance | undefined>(undefined);
 
   const [openNode, setOpenNode] = useState(false);
@@ -61,8 +56,11 @@ const Editor = () => {
 
   const debouncedUpdates = useDebouncedCallback(
     async (editor: EditorInstance) => {
-      const json = editor.getJSON();
-      await blog?.updateContent(JSON.stringify(json));
+      const json = JSON.stringify(editor.getJSON());
+      if (json !== lastSavedContent.current) {
+        lastSavedContent.current = json;
+        await blog?.updateContent(json);
+      }
     },
     500,
   );
@@ -78,6 +76,7 @@ const Editor = () => {
     if (!editor || !blog?.content) return;
 
     const currentContent = JSON.stringify(editor.getJSON());
+    lastSavedContent.current = currentContent;
     if (currentContent === blog.content) return; // Avoid unnecessary re-renders
 
     const { from, to } = editor.state.selection; // Save cursor position
@@ -108,7 +107,7 @@ const Editor = () => {
             setEditor(editor.editor);
           }}
           className={cn(
-            poppins.className,
+            font.className,
             "relative min-h-[20vh] w-full max-w-screen-lg sm:mb-[calc(20vh)] min-w-fit text-foreground",
           )}
           editorProps={{

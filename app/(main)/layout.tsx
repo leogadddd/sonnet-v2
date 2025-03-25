@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
+import ModalsProvider from "@/components/modals";
 import SearchCommand from "@/components/search-command";
 import SettingsInitializer from "@/components/settings-initializer";
 import SideBar from "@/components/sidebar";
@@ -34,6 +35,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-full overflow-hidden">
+      <ModalsProvider />
       <SettingsInitializer />
       <SearchCommand />
       <SideBar />

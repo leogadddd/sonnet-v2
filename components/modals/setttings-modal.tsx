@@ -31,9 +31,11 @@ const SettingsModal = () => {
   >(settings_list[0].content);
 
   const close = () => {
-    setSelectedTab(settings_list[0]); // can be deleted to improve user navigation
-    setContent(settings_list[0].content);
     onClose();
+    setTimeout(() => {
+      setSelectedTab(settings_list[0]); // can be deleted to improve user navigation
+      setContent(settings_list[0].content);
+    }, 300);
   };
 
   const handleTabSelect = (

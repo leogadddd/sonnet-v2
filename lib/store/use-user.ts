@@ -113,17 +113,8 @@ export const useUser = create<UserStore>()(
           return;
         }
 
-        // Parse email_addresses from text[] to JSON
-        const emailAddresses =
-          data?.email_addresses?.map(
-            (email: string) => JSON.parse(email) as EmailAddress,
-          ) || [];
-
         set({
-          user: {
-            ...data,
-            email_addresses: emailAddresses,
-          },
+          user: data,
         });
       },
     }),

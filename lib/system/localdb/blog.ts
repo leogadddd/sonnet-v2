@@ -56,13 +56,13 @@ export default class Blog extends Entity<SonnetDB> {
   content!: string;
   cover_image!: cover_image | null;
   icon!: string | null;
+  read_time!: number;
 
   tags!: string[];
   likes!: number;
   views!: number;
   comments!: number;
   shares!: number;
-  read_time!: number;
 
   is_pinned!: number;
   is_featured!: number;
