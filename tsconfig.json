@@ -25,7 +25,8 @@
         "./components/*",
         "./app/(authentication)/components/*",
         "./app/(marketing)/components/*",
-        "./app/(main)/components/*"
+        "./app/(main)/components/*",
+        "./app/(public)/components/*"
       ]
     }
   },

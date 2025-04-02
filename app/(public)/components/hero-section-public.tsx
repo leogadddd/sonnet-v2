@@ -29,7 +29,6 @@ const transitionVariants = {
 export default function ExploreHero() {
   return (
     <>
-      <HeroHeader />
       <main className="overflow-hidden">
         <div
           aria-hidden
@@ -78,7 +77,7 @@ export default function ExploreHero() {
             </AnimatedGroup>
             <div className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--color-background)_75%)]"></div>
             <div className="mx-auto max-w-7xl px-6">
-              <div className="px-20 text-start sm:mx-auto lg:mr-auto lg:mt-0">
+              <div className="px-0 md:px-20 text-start sm:mx-auto lg:mr-auto lg:mt-0">
                 {/* <AnimatedGroup variants={transitionVariants}>
                   <Link
                     href="#link"

@@ -8,25 +8,24 @@ import { Button } from "./ui/button";
 import { useEdgeStore } from "@/lib/edgestore/edgestore";
 import { useCoverImage } from "@/lib/store/use-cover-image";
 import { useSupabase } from "@/lib/supabase/supabase-client";
-import { cover_image } from "@/lib/system/localdb/blog";
-import dbClient from "@/lib/system/localdb/client";
+import Blog, { cover_image } from "@/lib/system/localdb/blog";
 import { cn } from "@/lib/utils";
-import { useLiveQuery } from "dexie-react-hooks";
 import { ImageIcon, Trash } from "lucide-react";
 
-const Cover = () => {
+interface CoverProps {
+  blog: Blog;
+  isPreview?: boolean;
+  isViewer?: boolean;
+}
+
+const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
   const supabase = useSupabase();
   const params = useParams();
   const { onReplace } = useCoverImage();
   const { edgestore } = useEdgeStore();
 
-  const blog = useLiveQuery(
-    async () => await dbClient.getBlogById(params?.blog_id as string),
-    [params?.blog_id],
-  );
-
   const onRemove = async () => {
-    if (!blog?.cover_image) return;
+    if (isPreview || !blog?.cover_image) return;
 
     const cover_image: cover_image = blog?.cover_image;
     await supabase
@@ -57,7 +56,7 @@ const Cover = () => {
           {/* <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background to-transparent h-20" /> */}
         </>
       )}
-      {!!blog?.cover_image && (
+      {!isPreview && !!blog?.cover_image && (
         <div className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity absolute w-full h-full p-4 py-6 flex items-end justify-end gap-x-2">
           <Button
             size="sm"

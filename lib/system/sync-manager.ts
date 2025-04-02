@@ -13,7 +13,13 @@ const dmp = new DiffMatchPatch();
 export type Updates = {
   blog_id: string;
   update_source: "local" | "cloud";
-  status: "missing" | "outdated" | "conflict";
+  status:
+    | "missing_on_local"
+    | "missing_on_cloud"
+    | "outdated_on_local"
+    | "outdated_on_cloud"
+    | "deleted_on_local";
+  description: string;
   updated_at: number;
 };
 
@@ -59,46 +65,55 @@ export class SyncManager {
     );
     const updates: Updates[] = [];
 
-    // Check local blogs against cloud
     for (const local_blog of local_blogs) {
       const cloud_blog = cloudBlogMap.get(local_blog.blog_id);
 
-      if (!cloud_blog) {
-        // Cloud is missing this blog
+      if (local_blog.deleted_at && local_blog.deleted_at !== 0) {
         updates.push({
           blog_id: local_blog.blog_id,
           update_source: "cloud",
-          status: "missing", // Should be uploaded to cloud
+          status: "deleted_on_local",
+          description: "Deleted locally, needs removal from cloud",
+          updated_at: local_blog.deleted_at,
+        });
+        cloudBlogMap.delete(local_blog.blog_id);
+        continue;
+      }
+
+      if (!cloud_blog) {
+        updates.push({
+          blog_id: local_blog.blog_id,
+          update_source: "cloud",
+          status: "missing_on_cloud",
+          description: "Not in cloud, needs upload",
           updated_at: local_blog.updated_at,
         });
       } else if (cloud_blog.updated_at > local_blog.updated_at) {
-        // Cloud version is newer
         updates.push({
           blog_id: local_blog.blog_id,
           update_source: "local",
-          status: "outdated", // Should be updated locally
+          status: "outdated_on_local",
+          description: "Cloud version is newer. needs download",
           updated_at: cloud_blog.updated_at,
         });
       } else if (cloud_blog.updated_at < local_blog.updated_at) {
-        // Local version is newer
         updates.push({
           blog_id: local_blog.blog_id,
           update_source: "cloud",
-          status: "outdated", // Should be updated on the cloud
+          status: "outdated_on_cloud",
+          description: "Local version is newer",
           updated_at: local_blog.updated_at,
         });
       }
-
-      // Remove processed blog from the cloud map
       cloudBlogMap.delete(local_blog.blog_id);
     }
 
-    // Any remaining cloud blogs are missing locally
     for (const cloud_blog of cloudBlogMap.values()) {
       updates.push({
         blog_id: cloud_blog.blog_id,
         update_source: "local",
-        status: "missing", // Should be downloaded to local
+        status: "missing_on_local",
+        description: "Not in local, needs download",
         updated_at: cloud_blog.updated_at,
       });
     }
@@ -151,6 +166,7 @@ export class SyncManager {
           blog_id: local_blog.blog_id,
           action: `Conflict resolved: ${conflictResult}`,
         });
+        await this.save_to_local(conflictResult);
         await this.save_to_cloud(conflictResult);
       }
       cloudBlogMap.delete(local_blog.blog_id);
@@ -314,6 +330,7 @@ export class SyncManager {
       await this.db.blogs.update(blog.blog_id, {
         synced_at: Date.now(),
       });
+
       console.log(`✅ Blog ${blog.blog_id} successfully saved to cloud.`);
     } catch (error) {
       console.error(`❌ Error saving blog ${blog.blog_id} to cloud:`, error);
@@ -335,6 +352,10 @@ export class SyncManager {
         blog.is_published = blog.is_published ? 1 : 0;
 
         blog.synced_at = Date.now();
+
+        await this.db.blogs.update(blog.blog_id, {
+          synced_at: Date.now(),
+        });
 
         await this.db.blogs.put(blog);
       });
@@ -378,3 +399,7 @@ export class SyncManager {
     return (await this.db.logs.get(id)) ?? null;
   }
 }
+
+export const useSyncManager = (user: UserObject): SyncManager => {
+  return new SyncManager(user);
+};

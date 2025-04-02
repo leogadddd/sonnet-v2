@@ -1,17 +1,29 @@
-"use client";
+import React, { useMemo } from "react";
 
-import React from "react";
-
-import BlogList from "../../components/blog-list";
-import ExploreHero from "../../components/hero-section";
+import FeedSwitcher from "../../components/feed-switcher";
+import FooterSection from "@/app/(marketing)/components/footer";
+import BlogList from "@/components/blog-list";
+import ExploreHero from "@/components/hero-section-public";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ExplorePage = () => {
   return (
     <div>
-      <ExploreHero />
-      <div>
-        <BlogList />
-      </div>
+      {/* <ExploreHero /> */}
+      <main className="pt-32 w-full min-h-screen flex flex-col lg:flex-row mx-auto max-w-7xl px-6 md:px-27 relative">
+        <div className="flex-1 w-full">
+          <FeedSwitcher />
+          <BlogList />
+        </div>
+        <div className="lg:w-82 xl:w-90 pl-4 flex flex-col gap-y-2">
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-12 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-4 rounded-xl" />
+          <Skeleton className="h-4 rounded-xl" />
+        </div>
+      </main>
+      <FooterSection />
     </div>
   );
 };

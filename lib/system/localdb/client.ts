@@ -8,6 +8,8 @@ import { useUser } from "@/lib/store/use-user";
 import { useLiveQuery } from "dexie-react-hooks";
 import { toast } from "sonner";
 
+export const explore = "12a3368a-1960-465e-9de0-22ecbb1703c2";
+
 export class SonnetDBClient {
   private static instance: SonnetDBClient;
   db: SonnetDB;
@@ -56,9 +58,12 @@ export class SonnetDBClient {
 
       icon: data.icon ?? null,
       description: data.description ?? "",
-      content: data.content ?? "",
+      content: data.content ?? {
+        content_html: "",
+        content_json: "",
+      },
+      category_id: data.category_id ?? explore,
       cover_image: data.cover_image ?? null,
-      tags: data.tags ?? [],
 
       likes: data.likes ?? 0,
       views: data.views ?? 0,
@@ -68,12 +73,12 @@ export class SonnetDBClient {
 
       is_pinned: data.is_pinned ?? 0,
       is_featured: data.is_featured ?? 0,
-      is_published: data.is_published ?? 1,
+      is_published: data.is_published ?? 0,
       is_archived: data.is_archived ?? 0,
       is_preview: data.is_preview ?? 0,
       is_on_explore: data.is_on_explore ?? 1,
 
-      published_at: data.published_at ?? Date.now(),
+      published_at: data.published_at ?? 0,
       created_at: data.created_at ?? Date.now(),
       updated_at: data.updated_at ?? Date.now(),
       archived_at: data.archived_at ?? 0,
@@ -195,15 +200,24 @@ export class SonnetDBClient {
 
   // ✅ Update a blog
   async updateBlog(blog_id: string, updates: Partial<Blog>): Promise<number> {
-    console.log(updates);
-    return handleDatabaseOperation(
-      () =>
-        this.db.blogs.update(blog_id, {
-          ...updates,
-          updated_at: Date.now(),
-        }),
-      `Failed to update blog with ID ${blog_id}.`,
-    );
+    return handleDatabaseOperation(async () => {
+      const current = await this.db.blogs.get(blog_id);
+
+      if (!current) {
+        throw new Error(`Blog with ID ${blog_id} not found`);
+      }
+
+      const hasChanges = Object.entries(updates).some(
+        ([key, value]) => current[key as keyof Blog] !== value,
+      );
+
+      if (!hasChanges) return 0;
+
+      return this.db.blogs.update(blog_id, {
+        ...updates,
+        updated_at: Date.now(),
+      });
+    }, `Failed to update blog with ID ${blog_id}.`);
   }
 
   // ✅ Soft delete a blog
@@ -298,4 +312,8 @@ export function RecentBlogs() {
     () => dbClient.db.blogs.where("is_archived").equals(0).sortBy("updated_at"),
     [],
   );
+}
+
+export function GetLastSyncedLog() {
+  return dbClient.db.logs.orderBy("created_at").last();
 }

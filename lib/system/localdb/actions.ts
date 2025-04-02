@@ -1,6 +1,7 @@
 // blogActions.ts
 import { BlogActionInternal } from "./blog";
-import { Pin, Trash } from "lucide-react";
+import { usePublish } from "@/lib/store/use-publish";
+import { Lock, Pin, Share, Trash, Unlock } from "lucide-react";
 
 export const blogActions: BlogActionInternal[] = [
   {
@@ -19,6 +20,34 @@ export const blogActions: BlogActionInternal[] = [
     disable: (ctx) => ctx.is_pinned === 1,
     action: async (ctx) => {
       await ctx.setPin(false);
+    },
+  },
+  {
+    name: "Lock",
+    description: "Lock this blog so it doesnt get edited.",
+    icon: Lock,
+    disable: (ctx) => ctx.is_preview === 0,
+    action: async (ctx) => {
+      await ctx.lock();
+    },
+  },
+  {
+    name: "Unlock",
+    description: "Lock this blog so it doesnt get edited.",
+    icon: Unlock,
+    disable: (ctx) => ctx.is_preview === 1,
+    action: async (ctx) => {
+      await ctx.unlock();
+    },
+  },
+  {
+    name: "Publish",
+    description: "Publish this blog",
+    icon: Share,
+    disable: (ctx) => !!ctx.blog_id,
+    action: async (ctx) => {
+      const { openWithBlog } = usePublish.getState();
+      openWithBlog(ctx.blog_id);
     },
   },
   {

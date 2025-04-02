@@ -14,6 +14,7 @@ import { TextButtons } from "./novel/selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./novel/slash-command";
 import { Separator } from "./novel/ui/separator";
 import { font } from "@/app/fonts";
+import Blog from "@/lib/system/localdb/blog";
 import dbClient from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -35,16 +36,13 @@ import { useDebouncedCallback } from "use-debounce";
 
 const extensions = [...defaultExtensions, slashCommand];
 
-const Editor = () => {
-  const [editable] = useState<boolean>(true);
-  const [isViewer] = useState<boolean>(false);
-  const params = useParams();
+interface EditorProps {
+  blog: Blog;
+  isPreview?: boolean;
+  isViewer?: boolean;
+}
 
-  const blog = useLiveQuery(
-    async () => await dbClient.getBlogById(params?.blog_id as string),
-    [params?.blog_id],
-  );
-
+const Editor = ({ blog, isPreview, isViewer }: EditorProps) => {
   const [content] = useState<JSONContent | null>(null);
   const lastSavedContent = useRef<string | null>(null);
   const [editor, setEditor] = useState<EditorInstance | undefined>(undefined);
@@ -56,10 +54,16 @@ const Editor = () => {
 
   const debouncedUpdates = useDebouncedCallback(
     async (editor: EditorInstance) => {
+      if (isViewer || isPreview) return;
+
       const json = JSON.stringify(editor.getJSON());
+      const html = editor.getHTML();
       if (json !== lastSavedContent.current) {
         lastSavedContent.current = json;
-        await blog?.updateContent(json);
+        await blog?.updateContent({
+          content_html: html,
+          content_json: json,
+        });
       }
     },
     500,
@@ -68,20 +72,21 @@ const Editor = () => {
   // if editable is changed, update the editor
   useEffect(() => {
     if (editor) {
-      editor.setEditable(editable);
+      const _isPreview = isPreview || blog?.is_preview === 1 ? true : false;
+      editor.setEditable(!_isPreview);
     }
-  }, [editable, editor]);
+  }, [editor, blog?.is_preview, isPreview]);
 
   useEffect(() => {
     if (!editor || !blog?.content) return;
 
-    const currentContent = JSON.stringify(editor.getJSON());
+    const currentContent = editor.getHTML();
     lastSavedContent.current = currentContent;
-    if (currentContent === blog.content) return; // Avoid unnecessary re-renders
+    if (currentContent === blog.content.content_html) return; // Avoid unnecessary re-renders
 
     const { from, to } = editor.state.selection; // Save cursor position
 
-    editor.commands.setContent(JSON.parse(blog.content), false); // Load new content without focusing
+    editor.commands.setContent(blog.content.content_html, false); // Load new content without focusing
     editor.commands.focus(); // Ensure the editor remains focused
 
     try {
@@ -92,17 +97,11 @@ const Editor = () => {
   }, [blog, editor]);
 
   return (
-    <div
-      className={cn(
-        "relative w-full max-w-screen-lg min-w-fit mt-4",
-        !editable && isViewer && "px-14",
-      )}
-    >
+    <div className={cn("relative w-full max-w-screen-lg min-w-fit mt-4")}>
       <EditorRoot>
         <EditorContent
           initialContent={content ?? undefined}
           extensions={extensions}
-          editable={editable}
           onCreate={(editor) => {
             setEditor(editor.editor);
           }}

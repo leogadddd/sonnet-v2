@@ -3,9 +3,9 @@ import React from "react";
 import { useTheme } from "next-themes";
 
 import ConfirmModal from "../modals/confirm-modal";
-import { Avatar, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import AccountDetailsSettings from "./account-details-setting";
 import { useSettings } from "@/lib/store/use-settings";
 import { useUser } from "@/lib/store/use-user";
 import { useClerk } from "@clerk/nextjs";
@@ -44,35 +44,7 @@ const AccountCenter = () => {
             handled through our authentication provider.
           </p>
         </div>
-        <div className="flex p-4 border rounded-md my-4">
-          <Avatar
-            role="button"
-            className="hover:opacity-75 cursor-pointer transition-opacity"
-            onClick={() =>
-              clerk.openUserProfile({
-                appearance: {
-                  baseTheme: theme === "dark" ? dark : undefined,
-                },
-              })
-            }
-          >
-            <AvatarImage src={user.image_url!} />
-          </Avatar>
-          <div className="ml-2 text-sm/4">
-            <h1 className="font-semibold flex items-center gap-1">
-              {user?.first_name}
-              <span className="text-xs font-normal text-muted-foreground/50">{`(${user?.username})`}</span>
-            </h1>
-            <span className="text-xs text-muted-foreground">
-              {user?.email_addresses[0].email_address}
-            </span>
-          </div>
-          <div className="flex items-center px-2">
-            <div className="px-2 border rounded-sm">
-              <h1 className="text-xs">{user?.plan.currentPlan}</h1>
-            </div>
-          </div>
-        </div>
+        <AccountDetailsSettings />
         <div>
           <h1 className="text-sm text-muted-foreground">Name: </h1>
           <div className="flex gap-x-2">
@@ -105,7 +77,7 @@ const AccountCenter = () => {
           <h1 className="text-sm text-muted-foreground">
             Email{user?.email_addresses.length > 1 && "s"}:{" "}
           </h1>
-          <div className="flex gap-x-2">
+          <div className="flex flex-col gap-x-2">
             {user?.email_addresses.map((email) => (
               <div key={email.id} className="flex items-center gap-x-2 w-full">
                 <Input
@@ -123,8 +95,10 @@ const AccountCenter = () => {
             ))}
           </div>
         </div>
-        <div className="my-12 flex items-center justify-center gap-x-4">
-          <Button onClick={openAccountCenter}>Open Account Center</Button>
+        <div className="my-12 flex items-center justify-between gap-x-2">
+          <Button onClick={openAccountCenter} variant="outline">
+            Open Account Center
+          </Button>
           <ConfirmModal
             onConfirm={signOut}
             title="Logout?"

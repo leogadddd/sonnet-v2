@@ -1,33 +1,36 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 
 import Cover from "@/components/cover";
 import ErrorCenterComponent from "@/components/error";
-import CoverImageModal from "@/components/modals/coverimage-modal";
-import EmojiPickerDialog from "@/components/modals/emojipicker-modal";
 import Toolbar from "@/components/toolbar";
-import dbClient from "@/lib/system/localdb/client";
-import { useLiveQuery } from "dexie-react-hooks";
+import { BlogData, GetBlog } from "@/lib/blog/action/getblog";
 
-const Editor = dynamic(() => import("@/components/editor"), { ssr: false });
+const Viewer = dynamic(() => import("@/components/editor"), { ssr: false });
 
-const EditorPage = () => {
+const ViewerPage = () => {
   const params = useParams();
+  const [data, setData] = useState<BlogData | null | undefined>(undefined);
 
-  const blog = useLiveQuery(
-    async () => await dbClient.getBlogById(params?.blog_id as string),
-    [params?.blog_id],
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await GetBlog({ slug: params?.slug as string });
 
-  if (blog === undefined) {
+      setData(data);
+    };
+
+    fetchData();
+  }, [params?.slug]);
+
+  if (data === undefined) {
     return <></>;
   }
 
-  if (!blog)
+  if (!data?.blog)
     return (
       <div className="h-full flex flex-col justify-center items-center pt-[48px] w-full">
         <ErrorCenterComponent
@@ -39,17 +42,15 @@ const EditorPage = () => {
 
   return (
     <>
-      <CoverImageModal />
-      <EmojiPickerDialog />
       <div className="h-full flex flex-col pt-[48px] w-full">
-        <Cover blog={blog} />
+        <Cover blog={data.blog} isPreview isViewer />
         <div className="px-8 mx-auto max-w-md md:max-w-3xl lg:max-w-4xl md:px-24 w-full">
-          <Toolbar blog={blog} />
-          <Editor blog={blog} />
+          <Toolbar isPreview blog={data.blog} isViewer />
+          <Viewer isPreview blog={data.blog} isViewer />
         </div>
       </div>
     </>
   );
 };
 
-export default EditorPage;
+export default ViewerPage;

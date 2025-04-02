@@ -13,90 +13,46 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Image, Smile, X } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 
-const Toolbar = () => {
-  const params = useParams();
+interface ToolbarProps {
+  blog: Blog;
+  isPreview?: boolean;
+  isViewer?: boolean;
+}
 
-  const blog = useLiveQuery(
-    async () => await dbClient.getBlogById(params?.blog_id as string),
-    [params?.blog_id],
-  );
+const Toolbar = ({
+  blog,
+  isPreview = false,
+  isViewer = false,
+}: ToolbarProps) => {
+  const _isPreview = isPreview || blog?.is_preview === 1 ? true : false;
 
   return (
     <div className="w-full group/toolbar">
-      <Toolbar.Icon blog={blog!} />
-      <Toolbar.Buttons blog={blog!} />
-      <Toolbar.Title blog={blog!} />
-      <Toolbar.Description blog={blog!} />
-      <Toolbar.Meta blog={blog!} />
-    </div>
-  );
-};
-
-interface MetaProps {
-  blog: Blog;
-}
-
-type Metadata = {
-  label: string;
-  value: string;
-  alwaysShow?: boolean;
-};
-
-const Meta = ({ blog }: MetaProps) => {
-  const { user } = useUser();
-
-  const metadataList: Metadata[] = [
-    {
-      label: "Owner",
-      value:
-        user?.id === blog?.author_id
-          ? "You"
-          : `${user?.first_name} ${user?.last_name}`,
-    },
-    {
-      label: "Read Time",
-      value: `${blog?.read_time} min${blog?.read_time > 1 ? "s" : ""}`,
-    },
-    {
-      label: "Created",
-      value: TimeFormatter.timeAgo(blog?.created_at),
-    },
-  ];
-
-  if (!user || !blog) return <></>;
-
-  return (
-    <div className="py-4 opacity-30 group-hover/toolbar:opacity-50 transition-opacity">
-      <div className="min-h-[52px] border-y border-muted-foreground/5 flex justify-between items-center">
-        {metadataList.map((metadata) => (
-          <div
-            key={metadata.label}
-            className={cn(
-              "flex flex-col",
-              !metadata.alwaysShow
-                ? "opacity-0 group-hover/toolbar:opacity-100"
-                : "",
-            )}
-          >
-            <h1 className="text-sm text-muted-foreground/50">
-              {metadata.label}
-            </h1>
-            <span className="font-semibold text-sm">{metadata.value}</span>
-          </div>
-        ))}
-      </div>
+      <Toolbar.Icon blog={blog!} isPreview={_isPreview} />
+      <Toolbar.Buttons blog={blog!} isPreview={_isPreview} />
+      <Toolbar.Title blog={blog!} isPreview={_isPreview} />
+      <Toolbar.Description blog={blog!} isPreview={_isPreview} />
+      <div className="border-b opacity-50 h-2" />
     </div>
   );
 };
 
 interface IconProps {
   blog: Blog;
+  isPreview: boolean;
 }
 
-const Icon = ({ blog }: IconProps) => {
+const Icon = ({ blog, isPreview }: IconProps) => {
   const { onOpen } = useEmojiPicker();
 
+  const openEmojiPicker = () => {
+    if (isPreview) return;
+    onOpen();
+  };
+
   const removeIcon = async () => {
+    if (isPreview) return;
+
     await blog?.updateIcon(null);
   };
 
@@ -111,19 +67,25 @@ const Icon = ({ blog }: IconProps) => {
         >
           <div
             role="button"
-            onClick={onOpen}
-            className="cursor-pointer hover:opacity-75 transition-opacity w-max"
+            onClick={openEmojiPicker}
+            className={cn(
+              "w-max cursor-default",
+              !isPreview &&
+                "cursor-pointer transition-opacity hover:opacity-75",
+            )}
           >
             <p className="text-5xl lg:text-6xl">{blog?.icon}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={removeIcon}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground text-xs border-none bg-transparent hover:bg-background/50"
-          >
-            <X />
-          </Button>
+          {!isPreview && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={removeIcon}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground text-xs border-none bg-transparent hover:bg-background/50"
+            >
+              <X />
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -132,36 +94,41 @@ const Icon = ({ blog }: IconProps) => {
 
 interface ButtonsProps {
   blog: Blog;
+  isPreview: boolean;
 }
 
-const Buttons = ({ blog }: ButtonsProps) => {
+const Buttons = ({ blog, isPreview }: ButtonsProps) => {
   const { onOpen: onOpenCoverImage } = useCoverImage();
   const { onOpen: onOpenEmojiPicker } = useEmojiPicker();
 
   return (
     <div className="flex gap-x-2 opacity-0 group-hover/toolbar:opacity-100 transition-opacity my-2 mt-4">
-      {!blog?.icon && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onOpenEmojiPicker}
-          className="text-muted-foreground/25 text-xs font-normal"
-        >
-          <Smile className="mr-2" />
-          add icon
-        </Button>
-      )}
-      {!blog?.cover_image?.image_url && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onOpenCoverImage}
-          className="text-muted-foreground/25 text-xs font-normal"
-        >
-          {/* eslint-disable-next-line jsx-a11y/alt-text */}
-          <Image className="mr-2" />
-          add cover
-        </Button>
+      {!isPreview && (
+        <>
+          {!blog?.icon && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenEmojiPicker}
+              className="text-muted-foreground/25 text-xs font-normal"
+            >
+              <Smile className="mr-2" />
+              add icon
+            </Button>
+          )}
+          {!blog?.cover_image?.image_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onOpenCoverImage}
+              className="text-muted-foreground/25 text-xs font-normal"
+            >
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
+              <Image className="mr-2" />
+              add cover
+            </Button>
+          )}
+        </>
       )}
     </div>
   );
@@ -169,14 +136,17 @@ const Buttons = ({ blog }: ButtonsProps) => {
 
 interface TitleProps {
   blog: Blog;
+  isPreview: boolean;
 }
 
-const Title = ({ blog }: TitleProps) => {
+const Title = ({ blog, isPreview }: TitleProps) => {
   const inputRef = useRef<ComponentRef<"textarea">>(null);
   const [value, setValue] = useState<string>(blog?.title);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = () => {
+    if (isPreview) return;
+
     setIsEditing(true);
     setValue(blog!.title);
     setTimeout(() => {
@@ -186,6 +156,8 @@ const Title = ({ blog }: TitleProps) => {
   };
 
   const disableInput = async () => {
+    if (isPreview) return;
+
     setIsEditing(false);
     if (!value || value === "") {
       const title = blog?.parent_blog === "" ? "New Blog" : "New Page";
@@ -195,6 +167,8 @@ const Title = ({ blog }: TitleProps) => {
   };
 
   const onInput = async (value: string) => {
+    if (isPreview) return;
+
     setValue(value);
     await blog?.updateTitle(value);
   };
@@ -215,11 +189,11 @@ const Title = ({ blog }: TitleProps) => {
           onBlur={disableInput}
           value={value}
           onChange={(e) => onInput(e.target.value)}
-          className="bg-transparent break-all outline-none resize-none text-3xl sm:text-4xl md:text-5xl font-bold w-full"
+          className="bg-transparent break-all outline-none resize-none text-3xl sm:text-4xl md:text-5xl font-semibold w-full"
         />
       ) : (
         <div role="button" onClick={enableInput} className="pb-[11px]">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold break-all w-full">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold break-all w-full">
             {blog?.title}
           </h1>
         </div>
@@ -230,14 +204,17 @@ const Title = ({ blog }: TitleProps) => {
 
 interface DescriptionProps {
   blog: Blog;
+  isPreview: boolean;
 }
 
-const Description = ({ blog }: DescriptionProps) => {
+const Description = ({ blog, isPreview }: DescriptionProps) => {
   const inputRef = useRef<ComponentRef<"textarea">>(null);
   const [value, setValue] = useState<string>(blog?.description);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const enableInput = () => {
+    if (isPreview) return;
+
     setIsEditing(true);
     setValue(blog!.description);
     setTimeout(() => {
@@ -247,10 +224,14 @@ const Description = ({ blog }: DescriptionProps) => {
   };
 
   const disableInput = async () => {
+    if (isPreview) return;
+
     setIsEditing(false);
   };
 
   const onInput = async (value: string) => {
+    if (isPreview) return;
+
     setValue(value);
     await blog?.updateDescription(value);
   };
@@ -276,7 +257,12 @@ const Description = ({ blog }: DescriptionProps) => {
       ) : (
         <div role="button" onClick={enableInput} className="pb-[1px]">
           {blog?.description === null || blog?.description === "" ? (
-            <span className="text-muted-foreground/25 opacity-0 group-hover/toolbar:opacity-100 transition-all">
+            <span
+              className={cn(
+                "text-muted-foreground/25 opacity-0",
+                !isPreview && "group-hover/toolbar:opacity-100 transition-all",
+              )}
+            >
               add a description
             </span>
           ) : (
@@ -290,7 +276,6 @@ const Description = ({ blog }: DescriptionProps) => {
   );
 };
 
-Toolbar.Meta = Meta;
 Toolbar.Icon = Icon;
 Toolbar.Buttons = Buttons;
 Toolbar.Title = Title;

@@ -1,5 +1,6 @@
 import { defaultSettingsValue } from "./settings";
-import AccountCenter from "@/components/user/account-settings";
+import SonnetSyncCenter from "@/components/sync/sonnetsync-center";
+import AccountCenter from "@/components/user/account-center";
 import {
   BookOpen,
   Cloud,
@@ -39,6 +40,7 @@ export const settings_list: SettingsType[] = [
     key: "sonnet-sync",
     label: "Sonnet Sync",
     icon: Cloud,
+    content: [SonnetSyncCenter],
   },
   {
     key: "general",

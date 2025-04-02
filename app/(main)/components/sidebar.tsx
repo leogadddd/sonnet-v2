@@ -260,6 +260,7 @@ interface WorkspaceProps {
 const Workspace = ({ label, pins = false }: WorkspaceProps) => {
   const router = useRouter();
   const [isEmpty, setIsEmpty] = useState<boolean>(false);
+
   const createNewBlog = async () => {
     await dbClient
       .createBlog({

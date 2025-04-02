@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import Blog from "@/lib/system/localdb/blog";
-import { RecentBlogs } from "@/lib/system/localdb/client";
+import dbClient, { RecentBlogs } from "@/lib/system/localdb/client";
 import { TimeFormatter, cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -24,10 +24,13 @@ import {
   Clock10,
   Clock11,
   Clock12,
+  Divide,
+  Plus,
 } from "lucide-react";
 
 const RecentBlogsList = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  const router = useRouter();
   const blogs = RecentBlogs() || [];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -39,6 +42,27 @@ const RecentBlogsList = () => {
 
     setCanScrollLeft(el.scrollLeft > 0);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth);
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -200 : 200,
+        behavior: "smooth",
+      });
+
+      setTimeout(checkScroll, 600);
+    }
+  };
+
+  const createNewBlog = async () => {
+    await dbClient
+      .createBlog({
+        title: "New Blog",
+      })
+      .then(({ id }: { id: string | null }) => {
+        router.push(`/app/${id}`);
+      });
   };
 
   useEffect(() => {
@@ -59,19 +83,6 @@ const RecentBlogsList = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, [blogs]);
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -200 : 200,
-        behavior: "smooth",
-      });
-
-      setTimeout(checkScroll, 600);
-    }
-  };
-
-  if (!blogs.length) return null;
 
   return (
     <div className="relative mt-4 w-full">
@@ -98,8 +109,25 @@ const RecentBlogsList = () => {
           ref={scrollRef}
           className="mt-3 pb-3 flex gap-x-3 overflow-x-auto max-w-full scroll-smooth snap-x snap-mandatory"
         >
+          {blogs && (
+            <div
+              role="button"
+              key={`Create a new Blog Button`}
+              onClick={createNewBlog}
+              className="snap-start shrink-0 w-48 cursor-pointer min-h-32"
+            >
+              <div className="h-full hover:bg-accent/5 bg-background text-muted-foreground flex flex-col items-center justify-center border border-accent/75 rounded-xl">
+                <Plus />
+                <h1 className="text-sm ">Create a new Blog</h1>
+              </div>
+            </div>
+          )}
           {blogs.toReversed().map((blog, index) => (
-            <div key={index} className="snap-start shrink-0 w-48">
+            <div
+              key={index}
+              role="button"
+              className="snap-start shrink-0 w-48 cursor-pointer"
+            >
               <RecentBlogsList.Item blog={blog} />
             </div>
           ))}

@@ -2,6 +2,7 @@ import { UploadedImage } from "../storage/image/image";
 import { blogActions } from "./actions";
 import dbClient from "./client";
 import type SonnetDB from "./db";
+import { useUser } from "@/lib/store/use-user";
 import { getReadTime } from "@/lib/utils";
 import { Entity } from "dexie";
 import { LucideIcon } from "lucide-react";
@@ -45,6 +46,11 @@ export type cover_image = {
   image_url: string;
 };
 
+export type Content = {
+  content_json: string;
+  content_html: string;
+};
+
 export default class Blog extends Entity<SonnetDB> {
   blog_id!: string;
   title!: string;
@@ -53,12 +59,12 @@ export default class Blog extends Entity<SonnetDB> {
   parent_blog!: string | null;
 
   description!: string;
-  content!: string;
+  content!: Content;
+  category_id!: string;
   cover_image!: cover_image | null;
   icon!: string | null;
   read_time!: number;
 
-  tags!: string[];
   likes!: number;
   views!: number;
   comments!: number;
@@ -81,6 +87,16 @@ export default class Blog extends Entity<SonnetDB> {
   async updateTitle(title: string) {
     await dbClient.updateBlog(this.blog_id, {
       title: title,
+    });
+  }
+
+  async updateSlug(slug: string) {
+    const { user } = useUser.getState();
+
+    if (user?.plan.currentPlan === "Free") return;
+
+    await dbClient.updateBlog(this.blog_id, {
+      slug: slug,
     });
   }
 
@@ -193,15 +209,56 @@ export default class Blog extends Entity<SonnetDB> {
     });
   }
 
-  async updateContent(content: string) {
+  async updateContent(content: Content) {
     await dbClient.updateBlog(this.blog_id, {
-      content: content ?? "",
-      read_time: getReadTime(content),
+      content: content ?? {
+        content_html: "",
+        content_json: "",
+      },
+      read_time: getReadTime(content.content_json),
     });
   }
 
   async delete() {
     await dbClient.softDeleteBlog(this.blog_id);
+  }
+
+  async publish() {
+    await dbClient.updateBlog(this.blog_id, {
+      is_published: 1,
+      published_at: Date.now(),
+    });
+  }
+
+  async unpublish() {
+    await dbClient.updateBlog(this.blog_id, {
+      is_published: 0,
+      published_at: 0,
+    });
+  }
+
+  async updateShowOnExplore(value: boolean) {
+    await dbClient.updateBlog(this.blog_id, {
+      is_on_explore: value ? 1 : 0,
+    });
+  }
+
+  async updateCategory(category_id: string) {
+    await dbClient.updateBlog(this.blog_id, {
+      category_id: category_id,
+    });
+  }
+
+  async lock() {
+    await dbClient.updateBlog(this.blog_id, {
+      is_preview: 1,
+    });
+  }
+
+  async unlock() {
+    await dbClient.updateBlog(this.blog_id, {
+      is_preview: 0,
+    });
   }
 
   get actions(): BlogAction[] {
