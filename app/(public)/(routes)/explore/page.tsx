@@ -1,19 +1,21 @@
-import React, { useMemo } from "react";
+import React, { Suspense, useMemo } from "react";
 
 import FeedSwitcher from "../../components/feed-switcher";
 import FooterSection from "@/app/(marketing)/components/footer";
 import BlogList from "@/components/blog-list";
-import ExploreHero from "@/components/hero-section-public";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ExplorePage = () => {
   return (
     <div>
-      {/* <ExploreHero /> */}
       <main className="pt-32 w-full min-h-screen flex flex-col lg:flex-row mx-auto max-w-7xl px-6 md:px-27 relative">
         <div className="flex-1 w-full">
-          <FeedSwitcher />
-          <BlogList />
+          <Suspense fallback={<Skeleton className="h-9 rounded-xl" />}>
+            <FeedSwitcher />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-48 rounded-xl" />}>
+            <BlogList />
+          </Suspense>
         </div>
         <div className="lg:w-82 xl:w-90 pl-4 flex flex-col gap-y-2">
           <Skeleton className="h-24 rounded-xl" />
