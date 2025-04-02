@@ -17,7 +17,7 @@ const ExplorePage = () => {
             <BlogList />
           </Suspense>
         </div>
-        <div className="lg:w-82 xl:w-90 pl-4 flex flex-col gap-y-2">
+        <div className="lg:w-82 xl:w-90 lg:pl-4 hidden lg:flex flex-col gap-y-2">
           <Skeleton className="h-24 rounded-xl" />
           <Skeleton className="h-12 rounded-xl" />
           <Skeleton className="h-32 rounded-xl" />
