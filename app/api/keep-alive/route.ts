@@ -6,10 +6,7 @@ export async function GET() {
   const supabase = UseSupabase();
 
   // Simple ping to keep Supabase awake
-  const { data, error } = await supabase
-    .from("your_table")
-    .select("*")
-    .limit(1);
+  const { data, error } = await supabase.from("blogs").select("*").limit(1);
   if (error) console.error("Supabase Ping Error:", error);
 
   return NextResponse.json({ status: "Supabase Pinged!" });
