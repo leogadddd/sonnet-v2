@@ -20,7 +20,6 @@ interface CoverProps {
 
 const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
   const supabase = useSupabase();
-  const params = useParams();
   const { onReplace } = useCoverImage();
   const { edgestore } = useEdgeStore();
 
@@ -38,17 +37,23 @@ const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
     });
   };
 
+  const cover_image = isViewer
+    ? typeof blog?.cover_image === "string"
+      ? JSON.parse(blog?.cover_image)
+      : blog?.cover_image
+    : blog?.cover_image;
+
   return (
     <div
       className={cn(
         "relative w-full bg-transparent group",
-        !blog?.cover_image ? "min-h-20" : "min-h-[20%]",
+        !cover_image ? "min-h-20" : "min-h-72",
       )}
     >
-      {!!blog?.cover_image && (
+      {!!cover_image && (
         <>
           <Image
-            src={blog?.cover_image.image_url as string}
+            src={cover_image.image_url as string}
             fill
             alt="Cover Image for the Blog"
             className="object-cover object-center"
@@ -56,12 +61,12 @@ const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
           {/* <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background to-transparent h-20" /> */}
         </>
       )}
-      {!isPreview && !!blog?.cover_image && (
+      {!isPreview && !!cover_image && (
         <div className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity absolute w-full h-full p-4 py-6 flex items-end justify-end gap-x-2">
           <Button
             size="sm"
             className="text-muted-foreground text-xs border-none bg-transparent hover:bg-background/50"
-            onClick={() => onReplace(blog?.cover_image?.image_url as string)}
+            onClick={() => onReplace(cover_image?.image_url as string)}
           >
             <ImageIcon className="mr-2" />
             Change Cover

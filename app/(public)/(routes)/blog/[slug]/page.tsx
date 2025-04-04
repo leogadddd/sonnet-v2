@@ -42,10 +42,10 @@ const ViewerPage = () => {
 
   return (
     <>
-      <div className="h-full flex flex-col pt-[48px] w-full">
+      <div className="h-full flex flex-col pt-[72px] w-full">
         <Cover blog={data.blog} isPreview isViewer />
         <div className="px-8 mx-auto max-w-md md:max-w-3xl lg:max-w-4xl md:px-24 w-full">
-          <Toolbar isPreview blog={data.blog} isViewer />
+          <Toolbar isPreview blog={data.blog} author={data.author} isViewer />
           <Viewer isPreview blog={data.blog} isViewer />
         </div>
       </div>

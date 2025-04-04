@@ -8,9 +8,11 @@ interface PublicLayoutProps {
 
 const PublicLayout = ({ children }: PublicLayoutProps) => {
   return (
-    <div>
+    <div className="flex h-full overflow-hidden">
       <HeroHeader />
-      <main>{children}</main>
+      <main className="h-full flex-1 overflow-y-auto dark:bg-[#141414]">
+        {children}
+      </main>
     </div>
   );
 };
