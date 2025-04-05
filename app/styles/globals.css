@@ -146,6 +146,17 @@ body,
     margin-top: 0;
   }
 
+  a {
+    @apply text-[#ff914d] underline-offset-2;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+      @apply text-[#ff914d]/80;
+      text-decoration: underline;
+    }
+  }
+
   /* List styles */
   ul,
   ol {
@@ -163,7 +174,7 @@ body,
   }
 
   pre {
-    @apply bg-foreground dark:bg-background text-background dark:text-foreground rounded-xl;
+    @apply bg-background text-background dark:text-foreground border-b-accent rounded-xl border dark:bg-[#141414];
     font-family: "JetBrainsMono", monospace;
     margin: 1.5rem 0;
     padding: 0.75rem 1rem;

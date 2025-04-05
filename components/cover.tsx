@@ -47,7 +47,8 @@ const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
     <div
       className={cn(
         "relative w-full bg-transparent group",
-        !cover_image ? "min-h-20" : "min-h-72",
+        !cover_image ? "min-h-20" : "min-h-96",
+        isViewer && "overflow-hidden my-12",
       )}
     >
       {!!cover_image && (
@@ -56,7 +57,7 @@ const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
             src={cover_image.image_url as string}
             fill
             alt="Cover Image for the Blog"
-            className="object-cover object-center"
+            className={cn("object-cover object-center")}
           />
           {/* <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background to-transparent h-20" /> */}
         </>

@@ -25,7 +25,6 @@ const ExplorePage = () => {
           <Skeleton className="h-4 rounded-xl" />
         </div>
       </main>
-      <FooterSection />
     </div>
   );
 };
