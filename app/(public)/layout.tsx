@@ -10,10 +10,8 @@ interface PublicLayoutProps {
 const PublicLayout = ({ children }: PublicLayoutProps) => (
   <>
     <HeroHeader />
-    <main className="h-screen">
-      {children}
-      <FooterSection />
-    </main>
+    <main className="min-h-screen">{children}</main>
+    <FooterSection />
   </>
 );
 
