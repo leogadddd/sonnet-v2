@@ -146,6 +146,12 @@ body,
     margin-top: 0;
   }
 
+  blockquote {
+    border-left: 3px solid #ff914d;
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+  }
+
   a {
     @apply text-[#ff914d] underline-offset-2;
     text-decoration: none;
