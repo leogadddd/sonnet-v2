@@ -43,10 +43,10 @@ const EditorPage = () => {
       <EmojiPickerDialog />
       <div className="h-full flex flex-col pt-[48px] w-full">
         <Cover blog={blog} />
-        <div className="px-8 mx-auto max-w-md md:max-w-3xl lg:max-w-4xl md:px-24 w-full">
+        <main className="px-8 mx-auto max-w-md md:max-w-3xl lg:max-w-4xl md:px-24 w-full min-h-screen">
           <Toolbar blog={blog} />
           <Editor blog={blog} />
-        </div>
+        </main>
       </div>
     </>
   );

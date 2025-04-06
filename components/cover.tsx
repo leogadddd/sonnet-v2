@@ -47,8 +47,9 @@ const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
     <div
       className={cn(
         "relative w-full bg-transparent group",
-        !cover_image ? "min-h-20" : "min-h-96",
-        isViewer && "overflow-hidden my-12",
+        !cover_image ? (isViewer ? "" : "min-h-20") : "min-h-96",
+        isViewer &&
+          (!cover_image ? "overflow-hidden" : "overflow-hidden my-12"),
       )}
     >
       {!!cover_image && (

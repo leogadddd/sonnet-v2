@@ -17,7 +17,7 @@ const menuItems = [
   { name: "Explore", href: "/explore" },
   { name: "Sync", href: "/#SonnetSync" },
   { name: "Publish", href: "/#Publish" },
-  { name: "Pricing", href: "/#Pricing" },
+  // { name: "Pricing", href: "/#Pricing" },
 ];
 
 export const HeroHeader = () => {
