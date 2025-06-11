@@ -31,9 +31,13 @@ export const getBlogs = async ({
   const cacheKey = `explore:${tab.name}:blogs:cursor:${cursor || "first"}`;
 
   if (!force) {
-    const cachedBlogs = await redis.get(cacheKey);
-    if (cachedBlogs && typeof cachedBlogs === "object") {
-      return cachedBlogs as BlogData[];
+    try {
+      const cachedBlogs = await redis.get(cacheKey);
+      if (cachedBlogs && typeof cachedBlogs === "object") {
+        return cachedBlogs as BlogData[];
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -58,7 +62,11 @@ export const getBlogs = async ({
     return [];
   }
 
-  await redis.set(cacheKey, JSON.stringify(data), { ex: 900 });
+  try {
+    await redis.set(cacheKey, JSON.stringify(data), { ex: 900 });
+  } catch (error) {
+    console.log(error)
+  }
 
   return data as BlogData[];
 };

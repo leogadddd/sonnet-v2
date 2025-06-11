@@ -48,10 +48,14 @@ export const getBlogItem = async ({
   console.log(cacheKey);
 
   if (!force) {
-    const cachedBlogItem = await redis.get(cacheKey);
+    try {
+      const cachedBlogItem = await redis.get(cacheKey);
 
-    if (cachedBlogItem && typeof cachedBlogItem === "object") {
-      return cachedBlogItem as BlogItem;
+      if (cachedBlogItem && typeof cachedBlogItem === "object") {
+        return cachedBlogItem as BlogItem;
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -104,7 +108,11 @@ export const getBlogItem = async ({
 
   console.log(result);
 
-  await redis.set(cacheKey, JSON.stringify(result), { ex: 900 });
+  try {
+    await redis.set(cacheKey, JSON.stringify(result), { ex: 900 });
+  } catch (error) {
+    console.log(error)
+  }
 
   return result;
 };

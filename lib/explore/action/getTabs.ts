@@ -17,9 +17,13 @@ export const getTabs = async ({ force = false }: GetTabsProps = {}) => {
   const cacheKey = `explore:tabs`;
 
   if (!force) {
-    const cachedTabs = await redis.get(cacheKey);
-    if (cachedTabs && typeof cachedTabs === "object") {
-      return cachedTabs as TabData[];
+    try {
+      const cachedTabs = await redis.get(cacheKey);
+      if (cachedTabs && typeof cachedTabs === "object") {
+        return cachedTabs as TabData[];
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -60,7 +64,11 @@ export const getTabs = async ({ force = false }: GetTabsProps = {}) => {
     })),
   ] as TabData[];
 
-  await redis.set(cacheKey, JSON.stringify(result), { ex: 900 });
+  try {
+    await redis.set(cacheKey, JSON.stringify(result), { ex: 900 });
+  } catch (error) {
+    console.log(error)
+  }
 
   return result;
 };
