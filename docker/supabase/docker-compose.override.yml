@@ -1,0 +1,36 @@
+# Sonnet local defaults. The upstream base file is kept unchanged.
+name: sonnet
+services:
+  api-gw:
+    ports: !override
+      - "127.0.0.1:8000:8000"
+  supavisor:
+    ports: !override []
+  auth:
+    environment:
+      GOTRUE_PASSWORD_MIN_LENGTH: "12"
+      GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: "true"
+      GOTRUE_SMTP_MAX_FREQUENCY: "1s"
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: "100"
+  mail:
+    image: axllent/mailpit:v1.29.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  db:
+    volumes:
+      - sonnet-db-data:/var/lib/postgresql/data
+  storage:
+    volumes:
+      - sonnet-storage:/var/lib/storage
+  imgproxy:
+    volumes:
+      - sonnet-storage:/var/lib/storage
+volumes:
+  sonnet-db-data:
+  sonnet-storage:

@@ -1,23 +1,18 @@
 import React, { ComponentRef, useRef, useState } from "react";
 
-import { useParams } from "next/navigation";
-
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useCoverImage } from "@/lib/store/use-cover-image";
 import { useEmojiPicker } from "@/lib/store/use-emoji-picker";
-import { useUser } from "@/lib/store/use-user";
 import Blog from "@/lib/system/localdb/blog";
-import dbClient from "@/lib/system/localdb/client";
-import { UserObject } from "@/lib/system/user/user";
+import { PublicProfile } from "@/lib/system/user/user";
 import { TimeFormatter, cn } from "@/lib/utils";
-import { useLiveQuery } from "dexie-react-hooks";
 import { Image, Smile, X } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 
 interface ToolbarProps {
   blog: Blog;
-  author?: UserObject;
+  author?: PublicProfile;
   isPreview?: boolean;
   isViewer?: boolean;
 }
@@ -46,23 +41,23 @@ const Toolbar = ({
 
 interface AuthorProps {
   blog: Blog;
-  author: UserObject;
+  author: PublicProfile;
   isPreview: boolean;
 }
 
-const Author = ({ blog, author, isPreview }: AuthorProps) => {
+const Author = ({ blog, author }: AuthorProps) => {
   return (
     <div className="flex items-center gap-x-2 mt-6 mb-2">
       <Avatar className="w-9 h-9">
         <AvatarImage
-          src={author?.image_url!}
+          src={author.image_url ?? undefined}
           alt={`${author.username}'s image`}
         />
       </Avatar>
       <div>
         <p className="text-sm font-semibold">{`${author?.first_name} ${author?.last_name}`}</p>
         <p className="text-xs text-muted-foreground">
-          {TimeFormatter.timeAgo(blog?.published_at!)} •{" "}
+          {TimeFormatter.timeAgo(blog.published_at)} •{" "}
           {`${blog?.read_time} min read`}
         </p>
       </div>

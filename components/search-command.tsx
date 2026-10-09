@@ -55,13 +55,6 @@ const SearchCommand = () => {
     ...filteredCommands,
   ];
 
-  // Reset selection when filter changes
-  useEffect(() => {
-    if (filteredItems.length > 0) {
-      setSelectedIndex(0);
-    }
-  }, [search, filteredItems.length]);
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       e.preventDefault();
@@ -70,6 +63,33 @@ const SearchCommand = () => {
     const shortcut = shortcutManager.registerShortcut(handler).ctrl().key("l");
     return () => shortcutManager.unregisterShortcut(shortcut, handler);
   }, [toggle]);
+
+  const handleSelectItem = (index: number) => {
+    if (processingSelectionRef.current) return;
+
+    if (index >= 0 && index < filteredItems.length) {
+      processingSelectionRef.current = true;
+
+      try {
+        const selectedItem = filteredItems[index];
+
+        if ("blog_id" in selectedItem) {
+          router.push(`/app/${selectedItem.blog_id}`);
+        } else {
+          selectedItem.action();
+        }
+
+        setSearch("");
+        setSelectedIndex(0);
+        onClose();
+      } finally {
+        // Reset after a short delay to prevent multiple executions
+        setTimeout(() => {
+          processingSelectionRef.current = false;
+        }, 100);
+      }
+    }
+  };
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -113,40 +133,16 @@ const SearchCommand = () => {
     setSelectedIndex(index);
   };
 
-  const handleSelectItem = (index: number) => {
-    if (processingSelectionRef.current) return;
-
-    if (index >= 0 && index < filteredItems.length) {
-      processingSelectionRef.current = true;
-
-      try {
-        const selectedItem = filteredItems[index];
-
-        if ("blog_id" in selectedItem) {
-          router.push(`/app/${selectedItem.blog_id}`);
-        } else {
-          selectedItem.action();
-        }
-
-        setSearch("");
-        setSelectedIndex(0);
-        onClose();
-      } finally {
-        // Reset after a short delay to prevent multiple executions
-        setTimeout(() => {
-          processingSelectionRef.current = false;
-        }, 100);
-      }
-    }
-  };
-
   return (
     <CommandDialog open={modal_state} onOpenChange={onClose}>
       <div className="flex items-center px-1 border-b">
         <Search className="h-4 w-4 mx-2 mr-1 text-muted-foreground" />
         <CommandInput
           value={search}
-          onValueChange={setSearch}
+          onValueChange={(value) => {
+            setSearch(value);
+            setSelectedIndex(0);
+          }}
           placeholder="Search blogs or run a command..."
           className="w-full text-sm p-2 border-none focus:outline-none"
           autoFocus

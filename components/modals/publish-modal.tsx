@@ -22,7 +22,8 @@ import ConfirmModal from "./confirm-modal";
 import { useCoverImage } from "@/lib/store/use-cover-image";
 import { usePublish } from "@/lib/store/use-publish";
 import { useUser } from "@/lib/store/use-user";
-import { useSupabase } from "@/lib/supabase/supabase-client";
+import { getSupabase } from "@/lib/supabase/supabase-client";
+import { fromCloud } from "@/lib/system/blog-serialization";
 import Blog from "@/lib/system/localdb/blog";
 import dbClient from "@/lib/system/localdb/client";
 import { shortcutManager } from "@/lib/system/shortcut-manager";
@@ -30,10 +31,11 @@ import { SyncManager } from "@/lib/system/sync-manager";
 import { cn, toSlug } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ImageIcon, Plus, RefreshCw, X } from "lucide-react";
+import { toast } from "sonner";
 
 const PublishModal = () => {
   const { user } = useUser();
-  const supabase = useSupabase();
+  const supabase = getSupabase();
   const params = useParams();
   const { modal_state, blog_id, onClose, toggle } = usePublish();
 
@@ -46,142 +48,94 @@ const PublishModal = () => {
     return await dbClient.getBlogById(_blog_id);
   }, [blog_id, params?.blog_id]);
 
-  const fetchBlogDetails = async () => {
-    if (!blog) return;
-
-    const { data: category } = await supabase
-      .from("blog_categories")
-      .select("*")
-      .eq("blog_id", blog?.blog_id)
-      .maybeSingle();
-
-    const { data: tags } = await supabase
-      .from("blog_tags")
-      .select("*")
-      .eq("blog_id", blog?.blog_id);
-
-    const { data: keywords } = await supabase
-      .from("blog_keywords")
-      .select("*")
-      .eq("blog_id", blog?.blog_id);
-
-    if (category) setCategory(category);
-    if (tags) setTags(tags);
-    if (keywords) setKeywords(keywords);
-  };
-
-  const saveBlogDetails = async () => {
-    if (!blog) return;
-
-    // --- CATEGORY HANDLING ---
-    const { data: existingCategory } = await supabase
-      .from("blog_categories")
-      .select("category_id")
-      .eq("blog_id", blog.blog_id)
-      .maybeSingle();
-
-    if (existingCategory) {
-      // Update the existing category
-      await supabase
-        .from("blog_categories")
-        .update({ category_id: category?.id })
-        .eq("id", existingCategory?.category_id);
-    } else {
-      // Insert new category
-      await supabase.from("blog_categories").insert({
-        blog_id: blog.blog_id,
-        category_id: category?.id,
-      });
-    }
-
-    // --- TAGS HANDLING ---
-    const { data: existingTags } = await supabase
-      .from("blog_tags")
-      .select("tag_id")
-      .eq("blog_id", blog.blog_id);
-
-    const existingTagIds = existingTags?.map((tag) => tag.tag_id) || [];
-    const newTagIds = tags?.map((tag) => tag.id) || [];
-
-    const tagsToAdd = newTagIds.filter((id) => !existingTagIds.includes(id));
-    const tagsToRemove = existingTagIds.filter((id) => !newTagIds.includes(id));
-
-    if (tagsToAdd.length) {
-      await supabase.from("blog_tags").insert(
-        tagsToAdd.map((tag_id) => ({
-          blog_id: blog.blog_id,
-          tag_id,
-        })),
-      );
-    }
-
-    if (tagsToRemove.length) {
-      await supabase
-        .from("blog_tags")
-        .delete()
-        .eq("blog_id", blog.blog_id)
-        .in("tag_id", tagsToRemove);
-    }
-
-    // --- KEYWORDS HANDLING ---
-    const { data: existingKeywords } = await supabase
-      .from("blog_keywords")
-      .select("keyword_id")
-      .eq("blog_id", blog.blog_id);
-
-    const existingKeywordIds = existingKeywords?.map((k) => k.keyword_id) || [];
-    const newKeywordIds = keywords?.map((k) => k.id) || [];
-
-    const keywordsToAdd = newKeywordIds.filter(
-      (id) => !existingKeywordIds.includes(id),
-    );
-    const keywordsToRemove = existingKeywordIds.filter(
-      (id) => !newKeywordIds.includes(id),
-    );
-
-    if (keywordsToAdd.length) {
-      await supabase.from("blog_keywords").insert(
-        keywordsToAdd.map((keyword_id) => ({
-          blog_id: blog.blog_id,
-          keyword_id,
-        })),
-      );
-    }
-
-    if (keywordsToRemove.length) {
-      await supabase
+  const detailBlogId = blog?.blog_id;
+  const detailCategoryId = blog?.category_id;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!modal_state || !detailBlogId || !detailCategoryId) return;
+    let active = true;
+    const db = getSupabase();
+    Promise.all([
+      db
+        .from("categories")
+        .select("*")
+        .eq("id", detailCategoryId)
+        .maybeSingle(),
+      db.from("blog_tags").select("tags(*)").eq("blog_id", detailBlogId),
+      db
         .from("blog_keywords")
-        .delete()
-        .eq("blog_id", blog.blog_id)
-        .in("keyword_id", keywordsToRemove);
+        .select("keywords(*)")
+        .eq("blog_id", detailBlogId),
+    ]).then(([categoryResult, tagsResult, keywordsResult]) => {
+      if (!active) return;
+      const failure =
+        categoryResult.error || tagsResult.error || keywordsResult.error;
+      if (failure) {
+        setError(failure.message);
+        return;
+      }
+      setCategory(categoryResult.data);
+      setTags((tagsResult.data ?? []).map((row) => row.tags).flat() as Tag[]);
+      setKeywords(
+        (keywordsResult.data ?? [])
+          .map((row) => row.keywords)
+          .flat() as Keyword[],
+      );
+    });
+    return () => {
+      active = false;
+    };
+  }, [modal_state, detailBlogId, detailCategoryId]);
+
+  const changePublication = async (published: boolean) => {
+    if (!user || !blog) return;
+    setBusy(true);
+    setError("");
+    try {
+      const manager = new SyncManager(user);
+      const current = await dbClient.getBlogById(blog.blog_id);
+      if (!current) throw new Error("Blog unavailable.");
+      // Persist a cloud draft first, so taxonomy and image ownership are valid.
+      await manager.saveBlog(current);
+      if (published) {
+        const { error } = await supabase.rpc("publish_blog", {
+          target_blog: current.blog_id,
+          selected_category: category?.id ?? current.category_id,
+          selected_tags: tags.map((tag) => tag.id),
+          selected_keywords: keywords.map((keyword) => keyword.id),
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("blogs")
+          .update({
+            is_published: false,
+            published_at: 0,
+            updated_at: Date.now(),
+          })
+          .eq("blog_id", current.blog_id);
+        if (error) throw error;
+      }
+      const { data, error } = await supabase
+        .from("blogs")
+        .select("*")
+        .eq("blog_id", current.blog_id)
+        .single();
+      if (error) throw error;
+      await dbClient.db.blogs.put(fromCloud(data));
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to update publication.",
+      );
+    } finally {
+      setBusy(false);
     }
   };
-
-  const removeBlogInCategory = async () => {
-    if (!user) return;
-
-    await supabase
-      .from("blog_categories")
-      .delete()
-      .eq("blog_id", blog?.blog_id);
-  };
-
-  const publish = async () => {
-    if (!user) return;
-    const syncManager = new SyncManager(user);
-    if (blog?.synced_at === 0) await syncManager.sync();
-    await saveBlogDetails();
-    await blog?.publish();
-    await syncManager.sync();
-  };
-
-  const unpublish = async () => {
-    if (!user) return;
-    await blog?.unpublish();
-    await removeBlogInCategory();
-    const syncManager = new SyncManager(user);
-    await syncManager.sync();
-  };
+  const publish = () => changePublication(true);
+  const unpublish = () => changePublication(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -194,11 +148,7 @@ const PublishModal = () => {
     const shortcut = shortcutManager.registerShortcut(handler).ctrl().key("p");
 
     return () => shortcutManager.unregisterShortcut(shortcut, handler);
-  }, []);
-
-  useEffect(() => {
-    fetchBlogDetails();
-  }, []);
+  }, [toggle]);
 
   return (
     <Dialog open={modal_state} onOpenChange={onClose}>
@@ -206,7 +156,15 @@ const PublishModal = () => {
         <DialogHeader className="p-4 pb-0">
           <DialogTitle>Publish</DialogTitle>
         </DialogHeader>
-        <div className="h-full pb-2 px-4 max-h-[50vh] overflow-y-auto">
+        {error && (
+          <p role="alert" className="px-4 text-sm text-red-500">
+            {error}
+          </p>
+        )}
+        <fieldset
+          disabled={busy}
+          className="h-full pb-2 px-4 max-h-[50vh] overflow-y-auto"
+        >
           {blog === null && (
             <div>
               <h1>No Blog Selected. Please Refresh this page.</h1>
@@ -242,7 +200,7 @@ const PublishModal = () => {
               />
             </div>
           )}
-        </div>
+        </fieldset>
       </DialogContent>
     </Dialog>
   );
@@ -501,7 +459,7 @@ interface CategoryProps {
 
 const Category = ({ blog, value, onChange }: CategoryProps) => {
   const { user } = useUser();
-  const supabase = useSupabase();
+  const supabase = getSupabase();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -534,7 +492,9 @@ const Category = ({ blog, value, onChange }: CategoryProps) => {
       updated_at: Date.now(),
     });
     if (error) {
-      console.error(error);
+      toast.error(error.message);
+      setIsLoading(false);
+      setIsAdding(false);
       return;
     }
     const data = await fetchAvailalbeCategories();
@@ -550,23 +510,20 @@ const Category = ({ blog, value, onChange }: CategoryProps) => {
   };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoading(true);
-      const data = await fetchAvailalbeCategories();
-
-      if (value === null) {
-        let categories = data as Category[];
-        let _defaultValue = categories.filter(
-          (category) => category.id == "12a3368a-1960-465e-9de0-22ecbb1703c2",
-        );
-        onChange(_defaultValue[0]);
-      }
-
-      setAvailableCategories(data);
-      setIsLoading(false);
+    let active = true;
+    getSupabase()
+      .from("categories")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) toast.error(error.message);
+        else setAvailableCategories(data ?? []);
+        setIsLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    fetchCategories();
   }, []);
 
   const memoizedCategories = useMemo(
@@ -648,7 +605,7 @@ const Category = ({ blog, value, onChange }: CategoryProps) => {
                           setInputValue("");
                         }}
                       >
-                        Add "{inputValue}"
+                        Add &quot;{inputValue}&quot;
                       </CommandItem>
                     )}
                 </CommandGroup>
@@ -677,7 +634,7 @@ export type Tag = {
 
 const Tags = ({ blog, value, onChange }: TagsProps) => {
   const { user } = useUser();
-  const supabase = useSupabase();
+  const supabase = getSupabase();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -708,7 +665,9 @@ const Tags = ({ blog, value, onChange }: TagsProps) => {
       updated_at: Date.now(),
     });
     if (error) {
-      console.error(error);
+      toast.error(error.message);
+      setIsLoading(false);
+      setIsAdding(false);
       return;
     }
     const data = await fetchAvailableTags();
@@ -738,14 +697,20 @@ const Tags = ({ blog, value, onChange }: TagsProps) => {
   };
 
   useEffect(() => {
-    const fetchTags = async () => {
-      setIsLoading(true);
-      const data = await fetchAvailableTags();
-      setAvailableTags(data);
-      setIsLoading(false);
+    let active = true;
+    getSupabase()
+      .from("tags")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) toast.error(error.message);
+        else setAvailableTags(data ?? []);
+        setIsLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    fetchTags();
   }, []);
 
   const memoizedTags = useMemo(() => availableTags, [availableTags]);
@@ -818,7 +783,7 @@ const Tags = ({ blog, value, onChange }: TagsProps) => {
                           setInputValue("");
                         }}
                       >
-                        Add "{inputValue}"
+                        Add &quot;{inputValue}&quot;
                       </CommandItem>
                     )}
                 </CommandGroup>
@@ -866,7 +831,7 @@ const Keywords = ({ blog, value, onChange }: KeywordsProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const { user } = useUser();
-  const supabase = useSupabase();
+  const supabase = getSupabase();
   const [open, setOpen] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [availableKeywords, setAvailableKeywords] = useState<Keyword[]>([]);
@@ -894,7 +859,9 @@ const Keywords = ({ blog, value, onChange }: KeywordsProps) => {
       created_at: Date.now(),
     });
     if (error) {
-      console.error(error);
+      toast.error(error.message);
+      setIsLoading(false);
+      setIsAdding(false);
       return;
     }
     const data = await fetchAvailableKeywords();
@@ -924,14 +891,20 @@ const Keywords = ({ blog, value, onChange }: KeywordsProps) => {
   };
 
   useEffect(() => {
-    const fetchKeywords = async () => {
-      setIsLoading(true);
-      const data = await fetchAvailableKeywords();
-      setAvailableKeywords(data);
-      setIsLoading(false);
+    let active = true;
+    getSupabase()
+      .from("keywords")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) toast.error(error.message);
+        else setAvailableKeywords(data ?? []);
+        setIsLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    fetchKeywords();
   }, []);
 
   const memoizedKeywords = useMemo(
@@ -1007,7 +980,7 @@ const Keywords = ({ blog, value, onChange }: KeywordsProps) => {
                           setInputValue("");
                         }}
                       >
-                        Add "{inputValue}"
+                        Add &quot;{inputValue}&quot;
                       </CommandItem>
                     )}
                 </CommandGroup>

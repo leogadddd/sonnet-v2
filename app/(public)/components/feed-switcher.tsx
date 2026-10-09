@@ -1,89 +1,57 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { PathParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Category } from "@/components/modals/publish-modal";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TabData, getTabs } from "@/lib/explore/action/getTabs";
+import { type TabData, getTabs } from "@/lib/explore/action/getTabs";
 import { useExplore } from "@/lib/store/use-explore";
-import { explore } from "@/lib/system/localdb/client";
-import { RefreshCcw } from "lucide-react";
 
-const FeedSwitcher = () => {
-  const { setInitial, changeTab, tabs } = useExplore();
-  const [current, setCurrent] = useState<TabData | null>(null);
+const defaultCategory = "12a3368a-1960-465e-9de0-22ecbb1703c2";
+export default function FeedSwitcher() {
+  const { tabs, currentTab, setInitial, changeTab } = useExplore();
+  const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const handleTabChange = (tab: TabData) => {
-    setCurrent(tab);
+  const category = searchParams.get("category");
+  useEffect(() => {
+    let active = true;
+    getTabs()
+      .then((data) => {
+        if (active)
+          setInitial(
+            data,
+            data.find((tab) => tab.name === category) ??
+              data.find((tab) => tab.id === defaultCategory) ??
+              data[0],
+          );
+      })
+      .catch((cause) => {
+        if (active) setError(cause.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, setInitial]);
+  function select(tab: TabData) {
     changeTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     params.set("category", tab.name);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  };
-
-  useEffect(() => {
-    async function fetchTabs() {
-      const category = searchParams.get("category");
-      const data = await getTabs();
-      setInitial(
-        data,
-        data.find((tab) => tab.name === category) ??
-          data.find((tab) => tab.id === explore)!,
-      );
-      setCurrent(
-        data.find((tab) => tab.name === category) ??
-          data.find((tab) => tab.id === explore)!,
-      );
-    }
-
-    fetchTabs();
-  }, []);
-
-  if (tabs.length === 0)
-    return (
-      <div className="flex">
-        <div className="flex flex-1 gap-x-2">
-          <Skeleton className="h-9 w-20" />
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-10" />
-        </div>
-      </div>
-    );
-
+    router.replace("?" + params.toString(), { scroll: false });
+  }
+  if (error) return <p role="alert">{error}</p>;
   return (
-    <div className="flex">
-      <div className="flex flex-1 gap-x-2">
-        {tabs.map((tab) => (
-          <div key={tab.id}>
-            <Button
-              onClick={() => handleTabChange(tab)}
-              variant={current?.name === tab.name ? "default" : "ghost"}
-              className="cursor-pointer"
-            >
-              {tab.name}
-            </Button>
-          </div>
-        ))}
-      </div>
-      {/* <Button
-        size="icon"
-        variant="outline"
-        onClick={refresh}
-        className="cursor-pointer"
-      >
-        <RefreshCcw
-          className={isRefreshingBlogs ? "animate-spin" : ""}
-          style={{ animationDirection: "reverse" }}
-        />
-      </Button> */}
+    <div className="flex flex-wrap gap-2">
+      {tabs.map((tab) => (
+        <Button
+          key={tab.id}
+          onClick={() => select(tab)}
+          variant={currentTab?.id === tab.id ? "default" : "ghost"}
+        >
+          {tab.name}
+        </Button>
+      ))}
     </div>
   );
-};
-
-export default FeedSwitcher;
+}

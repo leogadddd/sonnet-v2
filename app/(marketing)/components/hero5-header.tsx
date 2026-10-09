@@ -2,15 +2,12 @@
 
 import React from "react";
 
-import { useTheme } from "next-themes";
 import Link from "next/link";
 
 import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
-import { useOrigin } from "@/lib/hooks/useOrigin";
 import { cn } from "@/lib/utils";
-import { useAuth, useClerk } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
+import { useAuth } from "@/providers/auth-provider";
 import { Menu, X } from "lucide-react";
 
 const menuItems = [
@@ -21,9 +18,6 @@ const menuItems = [
 ];
 
 export const HeroHeader = () => {
-  const { theme } = useTheme();
-  const origin = useOrigin();
-  const clerk = useClerk();
   const { isSignedIn } = useAuth();
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -106,16 +100,8 @@ export const HeroHeader = () => {
                       variant="outline"
                       size="sm"
                       className={cn(isScrolled && "lg:hidden")}
-                      onClick={() =>
-                        clerk.openSignIn({
-                          forceRedirectUrl: `${origin}/app`,
-                          appearance: {
-                            baseTheme: theme === "dark" ? dark : undefined,
-                          },
-                        })
-                      }
                     >
-                      <Link href="#">
+                      <Link href="/sign-in">
                         <span>Login</span>
                       </Link>
                     </Button>
@@ -123,16 +109,8 @@ export const HeroHeader = () => {
                       asChild
                       size="sm"
                       className={cn(isScrolled && "lg:hidden")}
-                      onClick={() =>
-                        clerk.openSignUp({
-                          forceRedirectUrl: `${origin}/app`,
-                          appearance: {
-                            baseTheme: theme === "dark" ? dark : undefined,
-                          },
-                        })
-                      }
                     >
-                      <Link href="#">
+                      <Link href="/sign-up">
                         <span>Sign Up</span>
                       </Link>
                     </Button>

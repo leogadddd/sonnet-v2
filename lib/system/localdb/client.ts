@@ -12,11 +12,29 @@ export const explore = "12a3368a-1960-465e-9de0-22ecbb1703c2";
 
 export class SonnetDBClient {
   private static instance: SonnetDBClient;
-  db: SonnetDB;
+  private activeDb: SonnetDB | null = null;
+  private accountId: string | null = null;
 
-  private constructor() {
-    this.db = new SonnetDB();
+  get db(): SonnetDB {
+    if (!this.activeDb) throw new Error("Sign in to access your drafts.");
+    return this.activeDb;
   }
+
+  setAccount(accountId: string | null) {
+    if (this.accountId === accountId) return;
+    this.activeDb?.close();
+    this.activeDb = null;
+    this.accountId = accountId;
+    if (accountId) {
+      const database = new SonnetDB(accountId);
+      this.activeDb = database;
+      void database
+        .open()
+        .catch((error) => console.error("Unable to open drafts", error));
+    }
+  }
+
+  private constructor() {}
 
   public static getInstance(): SonnetDBClient {
     if (!SonnetDBClient.instance) {

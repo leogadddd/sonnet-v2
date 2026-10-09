@@ -24,14 +24,15 @@ import {
   Clock10,
   Clock11,
   Clock12,
-  Divide,
   Plus,
 } from "lucide-react";
 
+const emptyBlogs: Blog[] = [];
+
 const RecentBlogsList = () => {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const router = useRouter();
-  const blogs = RecentBlogs() || [];
+  const liveBlogs = RecentBlogs();
+  const blogs = liveBlogs ?? emptyBlogs;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);

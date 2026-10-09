@@ -32,15 +32,6 @@ export type BlogAction = {
   };
 };
 
-export type EdgestoreResponse = {
-  url: string;
-  size: number;
-  uploadedAt: Date;
-  metadata: Record<string, never>;
-  path: Record<string, never>;
-  pathOrder: string[];
-};
-
 export type cover_image = {
   uploaded_image_id: string;
   image_url: string;

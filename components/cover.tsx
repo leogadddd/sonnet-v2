@@ -1,16 +1,18 @@
 import React from "react";
 
 import Image from "next/image";
-import { useParams } from "next/navigation";
 
 import ConfirmModal from "./modals/confirm-modal";
 import { Button } from "./ui/button";
-import { useEdgeStore } from "@/lib/edgestore/edgestore";
+import { deleteImage } from "@/lib/storage/upload";
 import { useCoverImage } from "@/lib/store/use-cover-image";
-import { useSupabase } from "@/lib/supabase/supabase-client";
-import Blog, { cover_image } from "@/lib/system/localdb/blog";
+import { useUser } from "@/lib/store/use-user";
+import Blog from "@/lib/system/localdb/blog";
+import dbClient from "@/lib/system/localdb/client";
+import { SyncManager } from "@/lib/system/sync-manager";
 import { cn } from "@/lib/utils";
 import { ImageIcon, Trash } from "lucide-react";
+import { toast } from "sonner";
 
 interface CoverProps {
   blog: Blog;
@@ -19,22 +21,23 @@ interface CoverProps {
 }
 
 const Cover = ({ blog, isPreview, isViewer }: CoverProps) => {
-  const supabase = useSupabase();
   const { onReplace } = useCoverImage();
-  const { edgestore } = useEdgeStore();
 
   const onRemove = async () => {
     if (isPreview || !blog?.cover_image) return;
 
-    const cover_image: cover_image = blog?.cover_image;
-    await supabase
-      .from("uploaded_images")
-      .delete()
-      .eq("id", cover_image.uploaded_image_id);
-    await blog?.updateCoverImage(null);
-    await edgestore.publicFiles.delete({
-      url: blog?.cover_image?.image_url as string,
-    });
+    try {
+      const id = blog.cover_image.uploaded_image_id;
+      await blog.updateCoverImage(null);
+      const user = useUser.getState().user;
+      const updated = await dbClient.getBlogById(blog.blog_id);
+      if (user && updated) await new SyncManager(user).saveBlog(updated);
+      await deleteImage(id);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Unable to remove cover.",
+      );
+    }
   };
 
   const cover_image = isViewer

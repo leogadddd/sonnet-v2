@@ -1,7 +1,7 @@
+import { supabaseConfig } from "./config";
 import { createBrowserClient } from "@supabase/ssr";
 
-export const useSupabase = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+export const getSupabase = () => {
+  const { url, key } = supabaseConfig();
+  return createBrowserClient(url, key);
+};

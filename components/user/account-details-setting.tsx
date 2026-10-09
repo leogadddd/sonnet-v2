@@ -25,9 +25,7 @@ const AccountDetailsSettings = () => {
         <h1 className="text-sm font-semibold">
           {user.first_name} {user.last_name}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          {user.email_addresses[0].email_address}
-        </p>
+        <p className="text-sm text-muted-foreground">{user.email}</p>
       </div>
       <div>
         <Badge className={cn(user.plan.currentPlan == "Pro" && "bg-[#ff914d]")}>

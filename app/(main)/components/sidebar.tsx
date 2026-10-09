@@ -18,7 +18,6 @@ import AppUser from "@/components/user/app-user";
 import { useSearchCommand } from "@/lib/store/use-search-command";
 import { useTrashbox } from "@/lib/store/use-trash-box";
 import dbClient, { SidebarBlogs } from "@/lib/system/localdb/client";
-import { shortcutManager } from "@/lib/system/shortcut-manager";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -69,11 +68,14 @@ const Sidebar = () => {
     }
   }, []);
 
-  const handleMouseUp = useCallback(() => {
-    isResizingRef.current = false;
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-  }, [handleMouseMove]);
+  const handleMouseUp = useCallback(
+    function onMouseUp() {
+      isResizingRef.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    },
+    [handleMouseMove],
+  );
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {

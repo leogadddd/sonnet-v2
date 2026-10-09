@@ -1,62 +1,30 @@
+import { uploadImage } from "@/lib/storage/upload";
+import { MAX_IMAGE_BYTES } from "@/lib/storage/validation";
 import { createImageUpload } from "novel";
 import { toast } from "sonner";
 
-const onUpload = (file: File) => {
-  const promise = fetch("/api/upload", {
-    method: "POST",
-    headers: {
-      "content-type": file?.type || "application/octet-stream",
-      "x-vercel-filename": file?.name || "image.png",
+export function imageUploader(blogId: string) {
+  return createImageUpload({
+    onUpload: async (file: File) => {
+      const promise = uploadImage(file, blogId);
+      toast.promise(promise, {
+        loading: "Uploading image…",
+        success: "Image uploaded.",
+        error: (error) => error.message,
+      });
+      return (await promise).url;
     },
-    body: file,
-  });
-
-  return new Promise((resolve, reject) => {
-    toast.promise(
-      promise.then(async (res) => {
-        // Successfully uploaded image
-        if (res.status === 200) {
-          const { url } = (await res.json()) as { url: string };
-          // preload the image
-          const image = new Image();
-          image.src = url;
-          image.onload = () => {
-            resolve(url);
-          };
-          // No blob store configured
-        } else if (res.status === 401) {
-          resolve(file);
-          throw new Error(
-            "`BLOB_READ_WRITE_TOKEN` environment variable not found, reading image locally instead."
-          );
-          // Unknown error
-        } else {
-          throw new Error("Error uploading image. Please try again.");
-        }
-      }),
-      {
-        loading: "Uploading image...",
-        success: "Image uploaded successfully.",
-        error: (e) => {
-          reject(e);
-          return e.message;
-        },
+    validateFn: (file) => {
+      if (
+        !["image/png", "image/jpeg", "image/gif", "image/webp"].includes(
+          file.type,
+        ) ||
+        file.size > MAX_IMAGE_BYTES
+      ) {
+        toast.error("Choose a PNG, JPEG, GIF, or WebP image under 20 MB.");
+        return false;
       }
-    );
+      return true;
+    },
   });
-};
-
-export const uploadFn = createImageUpload({
-  onUpload,
-  validateFn: (file) => {
-    if (!file.type.includes("image/")) {
-      toast.error("File type not supported.");
-      return false;
-    }
-    if (file.size / 1024 / 1024 > 20) {
-      toast.error("File size too big (max 20MB).");
-      return false;
-    }
-    return true;
-  },
-});
+}

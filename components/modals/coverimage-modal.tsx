@@ -1,126 +1,77 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { useParams } from "next/navigation";
 
 import { SingleImageDropzone } from "../single-image-dropzone";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useEdgeStore } from "@/lib/edgestore/edgestore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { deleteImage, uploadImage } from "@/lib/storage/upload";
 import { useCoverImage } from "@/lib/store/use-cover-image";
 import { useUser } from "@/lib/store/use-user";
-import { useSupabase } from "@/lib/supabase/supabase-client";
 import dbClient from "@/lib/system/localdb/client";
 import { UploadedImage } from "@/lib/system/storage/image/image";
+import { SyncManager } from "@/lib/system/sync-manager";
 import { useLiveQuery } from "dexie-react-hooks";
+import { toast } from "sonner";
 
-const CoverImageModal = () => {
-  const { user } = useUser();
-  const supabase = useSupabase();
+export default function CoverImageModal() {
   const params = useParams();
-  const { edgestore } = useEdgeStore();
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [file, setFile] = useState<File>();
-  const { modal_state, url, onClose } = useCoverImage();
-
+  const { modal_state, onClose } = useCoverImage();
+  const [busy, setBusy] = useState(false);
   const blog = useLiveQuery(
-    async () => await dbClient.getBlogById(params?.blog_id as string),
+    () => dbClient.getBlogById(params?.blog_id as string),
     [params?.blog_id],
   );
-
-  const close = () => {
-    setFile(undefined);
-    setIsSubmitting(false);
-    onClose();
-  };
-
-  const onChange = async (file?: File) => {
-    if (file && user && blog) {
-      setIsSubmitting(true);
-      setFile(file);
-
-      const res = await edgestore.publicFiles.upload({
-        file,
-        options: { replaceTargetUrl: url },
-      });
-
-      const image = new UploadedImage({
-        user_id: user?.id,
-        blog_id: blog?.blog_id,
-        image_url: res.url,
-        file_size: res.size,
-        uploaded_at: res.uploadedAt.getTime(),
-      });
-
-      const existing_id = blog?.cover_image?.uploaded_image_id;
-
-      if (existing_id) {
-        const { error: existing_error } = await supabase
-          .from("uploaded_images")
-          .select("id")
-          .eq("id", existing_id)
-          .single();
-
-        if (existing_error) {
-          console.error("Error Checking Image Database", existing_error);
-          return;
-        }
-
-        const { error } = await supabase
-          .from("uploaded_images")
-          .update(image)
-          .eq("id", existing_id);
-
-        if (error) {
-          console.error("Error Uploading Image");
-          return;
-        }
-
-        await blog?.updateCoverImage({
-          ...image,
-          id: existing_id,
-        });
-      } else {
-        const { data, error } = await supabase
-          .from("uploaded_images")
-          .insert(image)
-          .select("id");
-
-        if (error) {
-          console.error("Error Uploading Image");
-          return;
-        }
-
-        await blog?.updateCoverImage({
-          ...image,
-          id: data[0].id,
-        });
-      }
-
-      close();
+  async function onChange(file?: File) {
+    const user = useUser.getState().user;
+    if (!file || !blog || !user) return;
+    setBusy(true);
+    try {
+      const oldId = blog.cover_image?.uploaded_image_id;
+      const result = await uploadImage(file, blog.blog_id);
+      await blog.updateCoverImage(
+        Object.assign(
+          new UploadedImage({
+            user_id: user.id,
+            blog_id: blog.blog_id,
+            image_url: result.url,
+            file_size: result.size,
+            uploaded_at: Date.now(),
+          }),
+          { id: result.id },
+        ),
+      );
+      const updated = await dbClient.getBlogById(blog.blog_id);
+      if (updated) await new SyncManager(user).saveBlog(updated);
+      if (oldId) await deleteImage(oldId);
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed.");
+    } finally {
+      setBusy(false);
     }
-  };
-
+  }
   return (
-    <Dialog open={modal_state} onOpenChange={onClose}>
-      <DialogContent className="p-2">
-        <DialogHeader className="p-2 pb-0">
-          <DialogTitle>Cover</DialogTitle>
+    <Dialog open={modal_state} onOpenChange={() => !busy && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cover image</DialogTitle>
         </DialogHeader>
         <SingleImageDropzone
-          className="w-full"
-          value={file}
+          disabled={busy}
           onChange={onChange}
-          disabled={isSubmitting}
+          dropzoneOptions={{
+            maxSize: 20 * 1024 * 1024,
+            accept: {
+              "image/png": [],
+              "image/jpeg": [],
+              "image/gif": [],
+              "image/webp": [],
+            },
+          }}
         />
       </DialogContent>
     </Dialog>
   );
-};
-
-export default CoverImageModal;
+}

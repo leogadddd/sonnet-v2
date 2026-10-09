@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 
-import { EdgeStoreProvider } from "../lib/edgestore/edgestore";
 import { font } from "./fonts";
 import "./styles/globals.css";
 import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -32,14 +31,12 @@ export default function RootLayout({
         />
       </head> */}
       <body className={cn("antialiased", font.className)}>
-        <ClerkProvider>
-          <EdgeStoreProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <Toaster position="bottom-right" />
-              {children}
-            </ThemeProvider>
-          </EdgeStoreProvider>
-        </ClerkProvider>
+        <AuthProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <Toaster position="bottom-right" />
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { Spinner } from "@/components/ui/spinner";
-import { formatFileSize } from "@edgestore/react/utils";
+import { formatBytes as formatFileSize } from "@/lib/utils";
 import { UploadCloudIcon, X } from "lucide-react";
 import { type DropzoneOptions, useDropzone } from "react-dropzone";
 import { twMerge } from "tailwind-merge";

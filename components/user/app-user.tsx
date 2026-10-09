@@ -1,49 +1,28 @@
-import React from "react";
+"use client";
 
-import { useTheme } from "next-themes";
+import Link from "next/link";
 
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useUser } from "@/lib/store/use-user";
-import { useClerk } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 
-const AppUser = () => {
-  const { theme } = useTheme();
-  const clerk = useClerk();
+export default function AppUser() {
   const { user } = useUser();
-
-  if (!user) return <></>;
-
+  if (!user) return null;
   return (
-    <div className="min-h-[70px] flex items-center justify-start px-4">
-      <div className="flex items-center">
-        {user?.image_url && (
-          <Avatar
-            role="button"
-            className="hover:opacity-75 cursor-pointer transition-opacity"
-            onClick={() =>
-              clerk.openUserProfile({
-                appearance: {
-                  baseTheme: theme === "dark" ? dark : undefined,
-                },
-              })
-            }
-          >
-            <AvatarImage src={user?.image_url} />
-          </Avatar>
-        )}
-        <div className="ml-2 text-sm/4">
-          <h1 className="font-semibold flex items-center gap-1">
-            {user?.first_name}
-            <span className="text-xs font-normal text-muted-foreground/50">{`(${user?.username})`}</span>
-          </h1>
-          <span className="text-xs text-muted-foreground">
-            {user?.email_addresses[0].email_address}
-          </span>
-        </div>
+    <Link
+      href="/app/account"
+      className="min-h-[70px] flex items-center gap-2 px-4 hover:opacity-75"
+    >
+      <Avatar>
+        <AvatarImage src={user.image_url ?? undefined} />
+        <AvatarFallback>{user.first_name?.slice(0, 1) ?? "S"}</AvatarFallback>
+      </Avatar>
+      <div className="text-sm">
+        <p className="font-semibold">
+          {user.first_name || user.username || "Your account"}
+        </p>
+        <p className="text-xs text-muted-foreground">{user.email}</p>
       </div>
-    </div>
+    </Link>
   );
-};
-
-export default AppUser;
+}

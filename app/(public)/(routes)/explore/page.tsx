@@ -1,7 +1,6 @@
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense } from "react";
 
 import FeedSwitcher from "../../components/feed-switcher";
-import FooterSection from "@/app/(marketing)/components/footer";
 import BlogList from "@/components/blog-list";
 import { Skeleton } from "@/components/ui/skeleton";
 

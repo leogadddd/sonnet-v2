@@ -1,4 +1,4 @@
-import { uploadFn } from "./image-upload";
+import { imageUploader } from "./image-upload";
 import {
   CheckSquare,
   Code,
@@ -136,7 +136,8 @@ export const suggestionItems = createSuggestionItems([
         if (input.files?.length) {
           const file = input.files[0];
           const pos = editor.view.state.selection.from;
-          uploadFn(file, editor.view, pos);
+          const blogId = window.location.pathname.split("/")[2];
+          if (blogId) imageUploader(blogId)(file, editor.view, pos);
         }
       };
       input.click();

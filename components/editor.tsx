@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useParams } from "next/navigation";
-
 import { defaultExtensions } from "./novel/extensions";
 import GenerativeMenuSwitch from "./novel/generative/generative-menu-switch";
-import { uploadFn } from "./novel/image-upload";
+import { imageUploader } from "./novel/image-upload";
 import { ColorSelector } from "./novel/selectors/color-selector";
 import { LinkSelector } from "./novel/selectors/link-selector";
 import { NodeSelector } from "./novel/selectors/node-selector";
@@ -15,9 +13,7 @@ import { slashCommand, suggestionItems } from "./novel/slash-command";
 import { Separator } from "./novel/ui/separator";
 import { font } from "@/app/fonts";
 import Blog from "@/lib/system/localdb/blog";
-import dbClient from "@/lib/system/localdb/client";
 import { cn } from "@/lib/utils";
-import { useLiveQuery } from "dexie-react-hooks";
 import {
   EditorCommand,
   EditorCommandEmpty,
@@ -32,7 +28,7 @@ import {
   handleImageDrop,
   handleImagePaste,
 } from "novel";
-import { useDebouncedCallback } from "use-debounce";
+import { toast } from "sonner";
 
 const extensions = [...defaultExtensions, slashCommand];
 
@@ -43,6 +39,7 @@ interface EditorProps {
 }
 
 const Editor = ({ blog, isPreview, isViewer }: EditorProps) => {
+  const uploadFn = imageUploader(blog.blog_id);
   const [content] = useState<JSONContent | null>(null);
   const lastSavedContent = useRef<string | null>(null);
   const [editor, setEditor] = useState<EditorInstance | undefined>(undefined);
@@ -52,47 +49,48 @@ const Editor = ({ blog, isPreview, isViewer }: EditorProps) => {
   const [openLink, setOpenLink] = useState(false);
   const [openAI, setOpenAI] = useState(false);
 
-  const debouncedUpdates = useDebouncedCallback(
-    async (editor: EditorInstance) => {
-      if (isViewer || isPreview) return;
-
-      const json = JSON.stringify(editor.getJSON());
-      const html = editor.getHTML();
-      if (json !== lastSavedContent.current) {
-        lastSavedContent.current = json;
-        await blog?.updateContent({
-          content_html: html,
-          content_json: json,
-        });
-      }
-    },
-    500,
-  );
+  const saveContent = async (instance: EditorInstance) => {
+    if (isViewer || isPreview || blog.is_preview) return;
+    const json = JSON.stringify(instance.getJSON());
+    if (json === lastSavedContent.current) return;
+    lastSavedContent.current = json;
+    try {
+      await blog.updateContent({
+        content_json: json,
+        content_html: instance.getHTML(),
+      });
+    } catch {
+      lastSavedContent.current = null;
+      toast.error("Unable to save this draft on your device.");
+    }
+  };
 
   // if editable is changed, update the editor
   useEffect(() => {
     if (editor) {
-      const _isPreview = isPreview || blog?.is_preview === 1 ? true : false;
-      editor.setEditable(!_isPreview);
+      const _isPreview = !!isViewer || !!isPreview || blog?.is_preview === 1;
+      editor.setEditable(!_isPreview, false);
     }
-  }, [editor, blog?.is_preview, isPreview]);
+  }, [editor, blog?.is_preview, isPreview, isViewer]);
 
   useEffect(() => {
     if (!editor || !blog?.content) return;
 
-    const currentContent = editor.getHTML();
-    lastSavedContent.current = currentContent;
-    if (currentContent === blog.content.content_html) return; // Avoid unnecessary re-renders
-
-    const { from, to } = editor.state.selection; // Save cursor position
-
-    editor.commands.setContent(blog.content.content_html, false); // Load new content without focusing
-    editor.commands.focus(); // Ensure the editor remains focused
-
+    const currentContent = JSON.stringify(editor.getJSON());
+    if (currentContent === blog.content.content_json) return;
     try {
-      editor.commands.setTextSelection({ from, to }); // Restore cursor position
-    } catch (e) {
-      console.warn("Failed to restore selection:", e);
+      const document = blog.content.content_json
+        ? JSON.parse(blog.content.content_json)
+        : blog.content.content_html || {
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          };
+      editor.commands.setContent(document, false);
+      lastSavedContent.current = JSON.stringify(editor.getJSON());
+    } catch {
+      toast.error(
+        "This document could not be opened. Its saved content has been preserved.",
+      );
     }
   }, [blog, editor]);
 
@@ -100,6 +98,7 @@ const Editor = ({ blog, isPreview, isViewer }: EditorProps) => {
     <div className={cn("relative w-full max-w-screen-lg min-w-fit mt-4")}>
       <EditorRoot>
         <EditorContent
+          immediatelyRender={false}
           initialContent={content ?? undefined}
           extensions={extensions}
           onCreate={(editor) => {
@@ -122,7 +121,7 @@ const Editor = ({ blog, isPreview, isViewer }: EditorProps) => {
             },
           }}
           onUpdate={({ editor }) => {
-            debouncedUpdates(editor);
+            void saveContent(editor);
           }}
           slotAfter={<ImageResizer />}
         >

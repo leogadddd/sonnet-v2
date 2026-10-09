@@ -49,8 +49,8 @@ const SettingsModal = () => {
 
   return (
     <Dialog open={modal_state} onOpenChange={close}>
-      <DialogContent className="p-2 w-[calc(75vh)] md:max-w-[100vh] h-[75vh] md:min-h-[60vh] flex flex-col gap-y-1">
-        <DialogHeader className="pb-0">
+      <DialogContent className="p-2 w-[calc(100vw-2rem)] max-w-4xl sm:max-w-4xl h-[min(75dvh,48rem)] max-h-[calc(100dvh-2rem)] flex flex-col gap-y-1 overflow-hidden">
+        <DialogHeader className="pb-0 shrink-0 pr-8">
           <div className="flex items-center gap-x-2 p-0 md:p-2">
             <Button
               onClick={() => setSidebarState(!sidebar_state)}
@@ -63,14 +63,14 @@ const SettingsModal = () => {
             <DialogTitle>Settings</DialogTitle>
           </div>
         </DialogHeader>
-        <div className="h-full flex gap-x-4 relative">
+        <div className="min-h-0 flex-1 flex gap-x-4 relative overflow-hidden">
           <SettingsModal.Sidebar
             sidebar_state={sidebar_state}
             setSidebarState={() => setSidebarState(!sidebar_state)}
             handleSelect={handleTabSelect}
             selected={selectedTab}
           />
-          <main className="flex-1 rounded-md flex flex-col gap-y-3">
+          <main className="min-h-0 min-w-0 flex-1 rounded-md flex flex-col gap-y-3 overflow-y-auto overscroll-contain p-2 md:pr-4">
             <div className="pb-4 flex flex-row justify-center md:justify-start">
               <h1 className="text-3xl font-bold">{selectedTab?.label}</h1>
             </div>
@@ -129,7 +129,7 @@ const Sidebar = ({
     <>
       <div
         className={cn(
-          "bg-background h-full border md:border-0 rounded-md z-[10] p-2 md:px-0",
+          "bg-background h-full max-w-full shrink-0 overflow-y-auto border md:border-0 rounded-md z-[10] p-2 md:px-0",
           isMobile
             ? sidebar_state
               ? "absolute md:relative"
@@ -183,26 +183,17 @@ const Item = ({ item }: ItemProps) => {
     updateSetting(item.key as keyof typeof settings, value);
   };
 
-  const ItemAction = () => {
-    switch (item.type) {
-      case "switch":
-        return (
-          <Switch
-            checked={Boolean(currentValue)}
-            onCheckedChange={handleChange}
-          />
-        );
-      default:
-        return <></>;
-    }
-  };
-
   return (
     <div className="flex flex-col gap-y-0.5">
       <h1 className="text-lg font-semibold">{item.title}</h1>
       <p className="text-sm text-muted-foreground/50">{item.description}</p>
       <div className="mt-4 flex items-center px-0.5">
-        <ItemAction />
+        {item.type === "switch" && (
+          <Switch
+            checked={Boolean(currentValue)}
+            onCheckedChange={handleChange}
+          />
+        )}
       </div>
     </div>
   );

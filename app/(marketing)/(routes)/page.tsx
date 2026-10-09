@@ -8,7 +8,7 @@ import SonnetFeatures from "@/components/sonnet-features";
 import SonnetPublishSection from "@/components/sonnet-publish-section";
 import SonnetSyncSection from "@/components/sonnet-sync-section";
 import { Spinner } from "@/components/ui/spinner";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function MarketingPage() {
   const { isLoaded } = useAuth();

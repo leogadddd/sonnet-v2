@@ -1,6 +1,5 @@
 import React from "react";
 
-import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -8,9 +7,7 @@ import { HeroHeader } from "@/components/hero5-header";
 import { AnimatedGroup } from "@/components/motion-primitives/animated-group";
 import { TextEffect } from "@/components/motion-primitives/text-effect";
 import { Button } from "@/components/ui/button";
-import { useOrigin } from "@/lib/hooks/useOrigin";
-import { useAuth, useClerk } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
+import { useAuth } from "@/providers/auth-provider";
 import { Telescope } from "lucide-react";
 
 const transitionVariants = {
@@ -25,7 +22,7 @@ const transitionVariants = {
       filter: "blur(0px)",
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         bounce: 0.3,
         duration: 1.5,
       },
@@ -34,9 +31,6 @@ const transitionVariants = {
 };
 
 export default function HeroSection() {
-  const { theme } = useTheme();
-  const origin = useOrigin();
-  const clerk = useClerk();
   const { isSignedIn } = useAuth();
   return (
     <>
@@ -80,7 +74,7 @@ export default function HeroSection() {
               className="absolute inset-0 -z-20"
             >
               <Image
-                src="https://bcepdlwsaoultocbdoox.supabase.co/storage/v1/object/public/marketing//marketing-night-background%20(1).jpg"
+                src="/app-image.png"
                 alt="background"
                 className="absolute inset-x-0 top-56 -z-20 hidden lg:top-32 dark:block"
                 width="3276"
@@ -166,16 +160,8 @@ export default function HeroSection() {
                         asChild
                         size="lg"
                         className="rounded-lg px-5 text-base"
-                        onClick={() =>
-                          clerk?.openSignIn({
-                            forceRedirectUrl: `${origin}/app`,
-                            appearance: {
-                              baseTheme: theme === "dark" ? dark : undefined,
-                            },
-                          })
-                        }
                       >
-                        <Link href="#">
+                        <Link href="/sign-in">
                           <span className="text-nowrap">Create a Blog</span>
                         </Link>
                       </Button>

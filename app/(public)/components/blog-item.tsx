@@ -14,10 +14,10 @@ import {
 } from "@/lib/explore/action/getBlogItem";
 import { BlogData } from "@/lib/explore/action/getBlogs";
 import { useUser } from "@/lib/store/use-user";
-import { User } from "@/lib/system/user/user";
 import { LikeBlog } from "@/lib/user/action/likeblog";
 import { TimeFormatter, cn } from "@/lib/utils";
-import { Heart, MessageCircle, Share } from "lucide-react";
+import { Heart } from "lucide-react";
+import { toast } from "sonner";
 
 interface BlogItemProps {
   blog: BlogData;
@@ -52,7 +52,7 @@ const BlogItem = ({ blog }: BlogItemProps) => {
       <div className="flex items-center justify-between gap-x-1 text-xs">
         <div className="flex items-center gap-x-1">
           <Avatar className="h-6 w-6 mr-1">
-            <AvatarImage src={data?.author?.image_url} />
+            <AvatarImage src={data?.author?.image_url ?? undefined} />
           </Avatar>
           <h1 className="font-semibold">
             {data?.author?.first_name} {data?.author?.last_name}
@@ -62,7 +62,7 @@ const BlogItem = ({ blog }: BlogItemProps) => {
         </div>
         <div className="flex items-center sm:hidden">
           <h4 className="text-muted-foreground">
-            {TimeFormatter.timeAgo(data?.blog?.published_at!)}
+            {TimeFormatter.timeAgo(data?.blog?.published_at ?? 0)}
           </h4>
         </div>
       </div>
@@ -85,7 +85,7 @@ const BlogItem = ({ blog }: BlogItemProps) => {
             <>
               <div className="overflow-hidden rounded-xl w-[200px] h-auto hidden sm:block">
                 <Image
-                  src={data?.blog?.cover_url!}
+                  src={data?.blog?.cover_url ?? ""}
                   alt={`${data?.blog?.title}-cover`}
                   width={200}
                   height={200}
@@ -93,7 +93,7 @@ const BlogItem = ({ blog }: BlogItemProps) => {
               </div>
               <div className="overflow-hidden rounded-xl w-[100px] h-auto block sm:hidden">
                 <Image
-                  src={data?.blog?.cover_url!}
+                  src={data?.blog?.cover_url ?? ""}
                   alt={`${data?.blog?.title}-cover`}
                   width={100}
                   height={100}
@@ -111,49 +111,51 @@ const BlogItem = ({ blog }: BlogItemProps) => {
       <div className="mt-3 h-8 flex gap-x-4 justify-between text-muted-foreground">
         <div className="hidden items-center sm:flex">
           <h4 className="text-xs text-muted-foreground">
-            {TimeFormatter.timeAgo(data?.blog?.published_at!)}
+            {TimeFormatter.timeAgo(data?.blog?.published_at ?? 0)}
           </h4>
         </div>
         <div className="flex items-center flex-1 gap-x-2">
-          {/* <div className="flex items-center text-sm px-2 font-medium">
-            <button
-              className="hover:opacity-50 transition cursor-pointer mr-1 p-1"
-              onClick={() =>
-                LikeBlog(data?.blog?.id!, user!).then((user) => {
-                  if (user) {
-                    setUser(new User(user));
-                  }
-                })
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!user || !data.blog}
+            aria-label={
+              user?.liked_blogs.includes(data.blog?.id ?? "")
+                ? "Unlike blog"
+                : "Like blog"
+            }
+            onClick={async () => {
+              if (!data.blog) return;
+              try {
+                const updated = await LikeBlog(data.blog.id);
+                if (updated) {
+                  setUser(updated);
+                  const next = await getBlogItem({ blog });
+                  setData(next);
+                }
+              } catch (cause) {
+                toast.error(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Unable to like blog.",
+                );
               }
-            >
-              <Heart
-                className={cn(
-                  "h-4 w-4",
-                  user && user.liked_blogs.includes(data?.blog?.id!)
-                    ? "text-red-500"
-                    : "",
-                )}
-              />
-            </button>
-            <h4>{data?.blog?.likes}</h4>
-          </div>
-          <div className="flex items-center text-sm px-2 font-medium">
-            <button className="hover:opacity-50 transition cursor-pointer mr-1 p-1">
-              <MessageCircle className="h-4 w-4" />
-            </button>
-            <h4>{data?.blog?.comments}</h4>
-          </div>
-          <div className="flex items-center text-sm px-2 font-medium">
-            <button className="hover:opacity-50 transition cursor-pointer mr-1 p-1">
-              <Share className="h-4 w-4" />
-            </button>
-            <h4>{data?.blog?.shares}</h4>
-          </div> */}
+            }}
+          >
+            <Heart
+              className={cn(
+                "h-4 w-4",
+                user?.liked_blogs.includes(data.blog?.id ?? "") &&
+                  "text-red-500 fill-current",
+              )}
+            />
+            {data.blog?.likes ?? 0}
+          </Button>
         </div>
         <div className="items-center hidden sm:flex">
           <h4 className="text-xs text-muted-foreground">
-            {data?.blog?.read_time} min{data?.blog?.read_time! > 1 ? "s" : ""}{" "}
-            read
+            {data?.blog?.read_time} min
+            {(data?.blog?.read_time ?? 0) > 1 ? "s" : ""} read
           </h4>
         </div>
       </div>
